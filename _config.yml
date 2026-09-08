@@ -1,15 +1,15 @@
-title: CAROW Working Papers in Industrial & Employment Relations
-short_title: CAROW IR/ER Working Papers
+title: CAROW Working Papers in Labor & Employment Relations
+short_title: CAROW LER Working Papers
 tagline: New research on industrial relations, employment relations, and workplace governance
 description: >-
   A working paper series affiliated with the Center for Applied Research on Work (CAROW)
   at the Cornell University ILR School, circulating new research on industrial relations,
   employment relations, labor-management institutions, collective bargaining, and workplace
   governance.
-url: "" # e.g. https://carow-irer.github.io — fill in once the repo is published
+url: "" # e.g. https://carow-ler.github.io — fill in once the repo is published
 baseurl: ""
 
-series_prefix: "CAROW-IRER-WP"
+series_prefix: "CAROW-LER-WP"
 
 carow:
   name: Center for Applied Research on Work

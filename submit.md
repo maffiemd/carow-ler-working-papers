@@ -13,8 +13,8 @@ workplace governance topics. Cross-cutting work connecting to CAROW's other rese
 
 ## Eligibility
 
-_TBD — specify whether the series is open to any IR/ER scholar or limited to CAROW-affiliated
-faculty, students, and visiting researchers._
+_TBD — specify whether the series is open to any labor/employment relations scholar or limited
+to CAROW-affiliated faculty, students, and visiting researchers._
 
 ## Format
 

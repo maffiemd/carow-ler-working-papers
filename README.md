@@ -1,4 +1,4 @@
-# CAROW Working Papers in Industrial & Employment Relations
+# CAROW Working Papers in Labor & Employment Relations
 
 A Jekyll-based working paper series site affiliated with the [Center for Applied Research
 on Work (CAROW)](https://www.ilr.cornell.edu/carow) at the Cornell University ILR School.
