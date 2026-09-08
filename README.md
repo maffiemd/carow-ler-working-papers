@@ -10,10 +10,12 @@ institutions, collective bargaining, and related workplace governance topics.
 ```
 eval "$(rbenv init -)"
 bundle install
-bundle exec jekyll serve --drafts
+bundle exec jekyll serve --drafts --baseurl ""
 ```
 
-Then visit http://localhost:4000.
+Then visit http://localhost:4000. (The `--baseurl ""` override keeps local links at the
+site root; the production build under `_config.yml`'s `baseurl` serves from
+https://maffiemd.github.io/carow-ler-working-papers/.)
 
 ## Publishing a new paper
 
