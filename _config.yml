@@ -25,8 +25,8 @@ editor:
 # The anon key is intentionally public: Row Level Security only lets it
 # insert new subscribers and call the narrow unsubscribe() RPC (see
 # supabase/schema.sql) — it can never read the subscriber list.
-supabase_url: ""
-supabase_anon_key: ""
+supabase_url: "https://gfiqcuznnmzpvnpynbxj.supabase.co"
+supabase_anon_key: "sb_publishable_ojxVoMg5XUzGjCCo1cOPjw_vVnsOlcr"
 
 collections:
   papers:
