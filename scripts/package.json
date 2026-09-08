@@ -1,12 +1,13 @@
 {
-  "name": "send-paper-notification",
+  "name": "carow-ler-working-papers-scripts",
   "private": true,
   "version": "1.0.0",
-  "description": "GitHub Action script: emails subscribers when a new working paper is added to _papers/.",
-  "main": "send-paper-notification.js",
+  "description": "Build/publish scripts for the CAROW LER Working Papers site.",
   "dependencies": {
     "@supabase/supabase-js": "^2.45.0",
     "resend": "^4.0.0",
-    "gray-matter": "^4.0.3"
+    "gray-matter": "^4.0.3",
+    "js-yaml": "^4.1.0",
+    "pdf-lib": "^1.17.1"
   }
 }
