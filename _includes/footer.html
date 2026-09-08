@@ -10,8 +10,29 @@
       <p>
         <a href="{{ '/feed.xml' | relative_url }}">RSS</a>
         &middot;
+        <a href="{{ '/unsubscribe/' | relative_url }}">Unsubscribe</a>
+        &middot;
         <a href="mailto:{{ site.editor.email }}">Contact the editor</a>
       </p>
     </div>
   </div>
+  {% unless page.url == '/subscribe/' %}
+  <div class="site-footer__inner footer-subscribe">
+    <div class="footer-subscribe__text">
+      <h2>Get notified about new papers</h2>
+      {% include subscribe-form.html %}
+    </div>
+  </div>
+  {% endunless %}
 </footer>
+
+<script>
+  window.SUPABASE_URL = {{ site.supabase_url | jsonify }};
+  window.SUPABASE_ANON_KEY = {{ site.supabase_anon_key | jsonify }};
+</script>
+<script src="{{ '/assets/js/vendor/supabase.min.js' | relative_url }}"></script>
+<script src="{{ '/assets/js/supabase-client.js' | relative_url }}"></script>
+<script src="{{ '/assets/js/subscribe.js' | relative_url }}"></script>
+{% if page.url == '/unsubscribe/' %}
+<script src="{{ '/assets/js/unsubscribe.js' | relative_url }}"></script>
+{% endif %}

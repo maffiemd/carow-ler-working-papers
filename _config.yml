@@ -21,6 +21,13 @@ editor:
   name: "TBD"
   email: "TBD"
 
+# Supabase project settings used by assets/js/supabase-client.js.
+# The anon key is intentionally public: Row Level Security only lets it
+# insert new subscribers and call the narrow unsubscribe() RPC (see
+# supabase/schema.sql) — it can never read the subscriber list.
+supabase_url: ""
+supabase_anon_key: ""
+
 collections:
   papers:
     output: true
@@ -50,3 +57,5 @@ exclude:
   - templates
   - vendor
   - node_modules
+  - scripts
+  - supabase

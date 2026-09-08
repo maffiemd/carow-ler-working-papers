@@ -1,0 +1,57 @@
+name: Notify Subscribers
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "_papers/**"
+  workflow_dispatch:
+    inputs:
+      paper_file:
+        description: "Path to a paper under _papers to send (e.g. _papers/2026-01-lastname-topic.md)"
+        required: true
+      test_email:
+        description: "If set, sends only to this address instead of every subscriber"
+        required: false
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Determine which paper(s) to send
+        id: papers
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "files=${{ inputs.paper_file }}" >> "$GITHUB_OUTPUT"
+          else
+            FILES=$(git diff --name-status "${{ github.event.before }}" "${{ github.sha }}" -- _papers/ | awk '$1 == "A" {print $2}' | grep -v '.gitkeep' | paste -sd, -)
+            echo "files=$FILES" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/setup-node@v4
+        if: steps.papers.outputs.files != ''
+        with:
+          node-version: "22"
+
+      - name: Install script dependencies
+        if: steps.papers.outputs.files != ''
+        working-directory: scripts
+        run: npm install
+
+      - name: Send notification
+        if: steps.papers.outputs.files != ''
+        run: node scripts/send-paper-notification.js
+        env:
+          PAPER_FILES: ${{ steps.papers.outputs.files }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          FROM_EMAIL: ${{ vars.FROM_EMAIL }}
+          REPLY_TO: ${{ vars.REPLY_TO }}
+          SITE_URL: ${{ vars.SITE_URL }}
+          SERIES_PREFIX: ${{ vars.SERIES_PREFIX }}
+          TEST_EMAIL: ${{ inputs.test_email }}
