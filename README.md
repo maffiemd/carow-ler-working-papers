@@ -87,6 +87,42 @@ Once these are set, pushing a new file under `_papers/` automatically emails eve
 subscribed. Test first with `workflow_dispatch` (Actions tab → Notify Subscribers → Run
 workflow) and a `test_email` input before sending to real subscribers.
 
+### Owner notifications (get emailed when someone subscribes)
+
+Subscribing happens directly between the browser and Supabase (no server code in the loop —
+see `assets/js/subscribe.js`), so catching the event to email yourself requires a Supabase
+[Database Webhook](https://supabase.com/docs/guides/database/webhooks) that calls a small
+Edge Function ([`supabase/functions/notify-owner`](supabase/functions/notify-owner)), which
+sends the email via Resend.
+
+1. Deploy the function (requires the [Supabase CLI](https://supabase.com/docs/guides/cli),
+   logged in and linked to your project):
+   ```bash
+   supabase functions deploy notify-owner --no-verify-jwt
+   ```
+2. Set its secrets:
+   ```bash
+   supabase secrets set \
+     RESEND_API_KEY=your_resend_api_key \
+     NOTIFY_FROM_EMAIL="onboarding@resend.dev" \
+     OWNER_EMAIL=mikemaffie@gmail.com \
+     SITE_URL="https://maffiemd.github.io/carow-ler-working-papers" \
+     WEBHOOK_SECRET=$(openssl rand -hex 32)
+   ```
+   (`NOTIFY_FROM_EMAIL` can stay on Resend's shared testing address — owner notifications
+   always go to your own verified `OWNER_EMAIL`, so they work even before you verify a
+   sending domain for `FROM_EMAIL` above.)
+3. In the Supabase dashboard, go to **Database → Webhooks**. If this is the first Database
+   Webhook on the project, click **Install integration** first (enables the `pg_net`
+   extension and bootstraps the schema the webhook trigger needs).
+4. Create one hook: `HTTP Request` / `POST` to your function's URL (shown after deploy, looks
+   like `https://gfiqcuznnmzpvnpynbxj.supabase.co/functions/v1/notify-owner`), table
+   `subscribers`, event `Insert`, with an `x-webhook-secret` header set to the same
+   `WEBHOOK_SECRET` value from step 2.
+
+Test it by subscribing on the live site, then check **Edge Functions → notify-owner →
+Invocations** in the dashboard for a `200` response and confirm the email arrived.
+
 ## Status
 
 Scaffolded; not yet publicly launched. Outstanding before launch:
