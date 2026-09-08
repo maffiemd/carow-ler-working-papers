@@ -21,19 +21,34 @@ https://maffiemd.github.io/carow-ler-working-papers/.)
 
 1. Copy [`templates/new-paper.md`](templates/new-paper.md) into `_papers/`, named
    `YYYY-NN-lastname-topic.md`.
-2. Fill in the front matter (WP number, title, authors, abstract, JEL codes, keywords).
-3. Drop the paper's PDF into `pdfs/` and point `pdf_path` at it.
+2. Fill in the front matter (WP number, title, authors, abstract, JEL codes, keywords), and
+   set `pdf_path` to where the finished PDF will live under `pdfs/`.
+3. Run the publish script, pointing it at the author's manuscript PDF (no cover page needed —
+   it builds one):
+   ```bash
+   cd scripts && npm install && cd ..   # first time only
+   node scripts/publish-paper.js _papers/2026-02-lastname-topic.md ~/Downloads/manuscript.pdf
+   ```
+   This builds a CAROW-branded cover sheet from the front matter, merges it onto the
+   manuscript, writes the result to the `pdf_path` you set, then commits and pushes both
+   files. The push is what publishes the paper — it triggers the existing GitHub Actions
+   that rebuild the site and email everyone on the mailing list, so there's nothing else to
+   run afterward. Add `--no-push` to build and commit locally without publishing yet.
 4. Once published, consider minting a DOI via [Zenodo](https://zenodo.org) and adding it
-   to the front matter.
-5. Commit and push to `main` — GitHub Actions builds and deploys automatically.
+   to the front matter in a follow-up commit.
+
+Manuscripts must already be PDFs — there's no auto-conversion from Word/other formats.
 
 ## Structure
 
 - `_papers/` — one Markdown file per paper (front matter only; the PDF is the actual paper)
-- `pdfs/` — the paper PDFs
+- `pdfs/` — the paper PDFs (cover sheet + manuscript, merged by `scripts/publish-paper.js`)
 - `_layouts/`, `_includes/` — templates
 - `assets/` — CSS and images (CAROW/Cornell brand assets used with CAROW's permission)
 - `templates/new-paper.md` — copy this to start a new paper
+- `scripts/generate-cover-sheet.js` — builds the CAROW cover sheet PDF and merges it onto a
+  manuscript (used by `publish-paper.js`; can also be run standalone)
+- `scripts/publish-paper.js` — the one-command publish tool described above
 
 ## Mailing list
 
