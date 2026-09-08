@@ -143,8 +143,7 @@ Invocations** in the dashboard for a `200` response and confirm the email arrive
 Scaffolded; not yet publicly launched. Outstanding before launch:
 
 - [ ] Confirm series editor and editorial board (see `editorial-board.md`)
-- [ ] Confirm submission eligibility (open vs. CAROW-affiliated only) in `submit.md`
-- [ ] Set up Supabase + Resend for the mailing list (see "Mailing list" above) — signup form
-      is live but inert until `supabase_url`/`supabase_anon_key` are set
+- [x] Confirm submission eligibility — open to all IR/ER scholars and students, in scope
+- [x] Set up Supabase + Resend for the mailing list — live, including owner notifications
 - [ ] Register with RePEc; consider SSRN mirroring
 - [ ] Link to this site from ilr.cornell.edu/carow
