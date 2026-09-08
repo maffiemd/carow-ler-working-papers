@@ -1,0 +1,17 @@
+<header class="site-header">
+  <div class="site-header__inner">
+    <a class="site-header__brand" href="{{ '/' | relative_url }}">
+      <img class="site-header__logo" src="{{ '/assets/images/carow-logo.svg' | relative_url }}" alt="CAROW logo">
+      <span class="site-header__title">
+        <span class="site-header__title-main">{{ site.short_title }}</span>
+        <span class="site-header__title-sub">{{ site.carow.parent }}</span>
+      </span>
+    </a>
+    <nav class="site-header__nav">
+      <a href="{{ '/papers/' | relative_url }}">Papers</a>
+      <a href="{{ '/submit/' | relative_url }}">Submit</a>
+      <a href="{{ '/editorial-board/' | relative_url }}">Editorial Board</a>
+      <a href="{{ site.carow.url }}">CAROW &#8599;</a>
+    </nav>
+  </div>
+</header>

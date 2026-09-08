@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "carow-wp",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": ["-lc", "eval \"$(rbenv init -)\"; bundle exec jekyll serve --host 0.0.0.0 --port 4111"],
+      "port": 4111
+    }
+  ]
+}

@@ -1,0 +1,54 @@
+---
+layout: default
+---
+<article class="paper">
+  <p class="paper__number">{{ site.series_prefix }}-{{ page.wp_number }}</p>
+  <h1 class="paper__title">{{ page.title }}</h1>
+
+  <ul class="paper__authors">
+    {% for author in page.authors %}
+      <li>{{ author.name }}{% if author.affiliation %}, <span class="paper__affiliation">{{ author.affiliation }}</span>{% endif %}</li>
+    {% endfor %}
+  </ul>
+
+  <p class="paper__meta">
+    {{ page.date | date: "%B %Y" }}
+    {% if page.status %} &middot; <span class="paper__status">{{ page.status | capitalize }}</span>{% endif %}
+    {% if page.forthcoming_in %} &middot; Forthcoming in {{ page.forthcoming_in }}{% endif %}
+  </p>
+
+  {% if page.abstract %}
+  <section class="paper__abstract">
+    <h2>Abstract</h2>
+    <p>{{ page.abstract }}</p>
+  </section>
+  {% endif %}
+
+  {% if page.jel_codes %}
+  <p class="paper__jel"><strong>JEL codes:</strong> {{ page.jel_codes | join: ", " }}</p>
+  {% endif %}
+
+  {% if page.keywords %}
+  <p class="paper__keywords"><strong>Keywords:</strong> {{ page.keywords | join: ", " }}</p>
+  {% endif %}
+
+  {% if page.pdf_path %}
+  <p class="paper__download">
+    <a class="button" href="{{ page.pdf_path | relative_url }}">Download PDF</a>
+  </p>
+  {% endif %}
+
+  <section class="paper__citation">
+    <h2>Suggested citation</h2>
+    <p>
+      {% for author in page.authors %}{{ author.name }}{% unless forloop.last %}; {% endunless %}{% endfor %}
+      ({{ page.date | date: "%Y" }}).
+      <em>{{ page.title }}</em>.
+      {{ site.series_prefix }}-{{ page.wp_number }}.
+      {{ site.carow.name }}, {{ site.carow.parent }}.
+      {% if page.doi %}https://doi.org/{{ page.doi }}{% endif %}
+    </p>
+  </section>
+
+  {% if page.doi %}<p class="paper__doi"><strong>DOI:</strong> <a href="https://doi.org/{{ page.doi }}">{{ page.doi }}</a></p>{% endif %}
+</article>

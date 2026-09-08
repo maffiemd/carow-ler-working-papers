@@ -1,0 +1,18 @@
+---
+layout: page
+title: Papers
+permalink: /papers/
+---
+
+{% assign papers = site.papers | sort: 'wp_number' | reverse %}
+{% assign years = papers | map: 'date' | map: 'year' | uniq %}
+
+<ul class="paper-list paper-list--full">
+  {% for paper in papers %}
+    {% include paper-list-item.html paper=paper %}
+  {% endfor %}
+</ul>
+
+{% if papers.size == 0 %}
+<p><em>The first papers in this series are forthcoming.</em></p>
+{% endif %}

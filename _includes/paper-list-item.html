@@ -1,0 +1,8 @@
+<li class="paper-list__item">
+  <span class="paper-list__number">{{ site.series_prefix }}-{{ include.paper.wp_number }}</span>
+  <a class="paper-list__title" href="{{ include.paper.url | relative_url }}">{{ include.paper.title }}</a>
+  <span class="paper-list__authors">
+    {% for author in include.paper.authors %}{{ author.name }}{% unless forloop.last %}, {% endunless %}{% endfor %}
+  </span>
+  <span class="paper-list__date">{{ include.paper.date | date: "%B %Y" }}</span>
+</li>

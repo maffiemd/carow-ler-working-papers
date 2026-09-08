@@ -1,0 +1,25 @@
+---
+layout: default
+---
+<section class="hero">
+  <img class="hero__banner" src="{{ '/assets/images/carow-banner.jpg' | relative_url }}" alt="">
+  <div class="hero__text">
+    <h1>{{ site.title }}</h1>
+    <p class="hero__tagline">{{ site.tagline }}</p>
+  </div>
+</section>
+
+<section class="scope-note">
+  {{ content }}
+</section>
+
+<section class="latest-papers">
+  <h2>Latest papers</h2>
+  <ul class="paper-list">
+    {% assign papers = site.papers | sort: 'wp_number' | reverse %}
+    {% for paper in papers limit: 5 %}
+      {% include paper-list-item.html paper=paper %}
+    {% endfor %}
+  </ul>
+  <p><a href="{{ '/papers/' | relative_url }}">Browse all papers &rarr;</a></p>
+</section>
