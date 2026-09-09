@@ -14,8 +14,8 @@ workplace governance topics. Cross-cutting work connecting to CAROW's other rese
 ## Eligibility
 
 Open to all industrial and employment relations scholars and students, not just those
-affiliated with CAROW or Cornell — the only requirement is that the paper fits the scope
-above.
+affiliated with CAROW, CIRHR, Cornell, or the University of Toronto — the only requirement
+is that the paper fits the scope above.
 
 ## Format
 

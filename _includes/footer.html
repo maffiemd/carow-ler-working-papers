@@ -1,11 +1,13 @@
 <footer class="site-footer">
   <div class="site-footer__inner">
     <img class="site-footer__logo" src="{{ '/assets/images/cornell-reduced-white.svg' | relative_url }}" alt="Cornell University">
+    <img class="site-footer__logo" src="{{ site.co_host.logo | relative_url }}" alt="{{ site.co_host.logo_alt }}">
     <div class="site-footer__text">
       <p>
-        {{ site.short_title }} is an applied-research output of the
-        <a href="{{ site.carow.url }}">{{ site.carow.name }} (CAROW)</a>
-        at the {{ site.carow.parent }}.
+        {{ site.short_title }} is a collaboration between the
+        <a href="{{ site.carow.url }}">{{ site.carow.name }} (CAROW)</a> at {{ site.carow.parent }}
+        and the <a href="{{ site.co_host.url }}">{{ site.co_host.name }} ({{ site.co_host.short_name }})</a>
+        at the {{ site.co_host.parent }}.
       </p>
       <p>
         <a href="{{ '/feed.xml' | relative_url }}">RSS</a>

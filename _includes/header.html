@@ -4,7 +4,7 @@
       <img class="site-header__logo" src="{{ '/assets/images/carow-logo.svg' | relative_url }}" alt="CAROW logo">
       <span class="site-header__title">
         <span class="site-header__title-main">{{ site.short_title }}</span>
-        <span class="site-header__title-sub">{{ site.carow.parent }}</span>
+        <span class="site-header__title-sub">{{ site.carow.parent }} &times; {{ site.co_host.parent }}</span>
       </span>
     </a>
     <nav class="site-header__nav">
@@ -13,6 +13,7 @@
       <a href="{{ '/editorial-board/' | relative_url }}">Editorial Board</a>
       <a href="{{ '/subscribe/' | relative_url }}">Subscribe</a>
       <a href="{{ site.carow.url }}">CAROW &#8599;</a>
+      <a href="{{ site.co_host.url }}">CIRHR &#8599;</a>
     </nav>
   </div>
 </header>
