@@ -1,7 +1,14 @@
 <header class="site-header">
   <div class="site-header__inner">
     <a class="site-header__brand" href="{{ '/' | relative_url }}">
-      <img class="site-header__logo" src="{{ '/assets/images/carow-logo.svg' | relative_url }}" alt="CAROW logo">
+      <span class="site-header__crests">
+        <span class="site-header__crest-badge site-header__crest-badge--cornell">
+          <img src="{{ '/assets/images/cornell-seal-red.svg' | relative_url }}" alt="Cornell University">
+        </span>
+        <span class="site-header__crest-badge site-header__crest-badge--uoft">
+          <img src="{{ '/assets/images/uoft-crest-icon-navy.svg' | relative_url }}" alt="University of Toronto">
+        </span>
+      </span>
       <span class="site-header__title">
         <span class="site-header__title-main">{{ site.short_title }}</span>
         <span class="site-header__title-sub">{{ site.carow.parent }} &times; {{ site.co_host.parent }}</span>

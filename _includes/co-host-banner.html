@@ -1,14 +1,20 @@
 <section class="co-host-banner">
   <p class="co-host-banner__label">A collaboration between</p>
-  <div class="co-host-banner__logos">
-    <a class="co-host-banner__plate" href="{{ site.carow.url }}">
-      <img class="co-host-banner__logo" src="{{ site.carow.logo | relative_url }}" alt="{{ site.carow.logo_alt }}">
-      <span class="co-host-banner__caption">{{ site.carow.parent }}</span>
+  <div class="co-host-banner__plate">
+    <a class="co-host-banner__inst" href="{{ site.carow.url }}">
+      <img class="co-host-banner__crest" src="{{ '/assets/images/cornell-seal-white.svg' | relative_url }}" alt="Cornell University">
+      <span class="co-host-banner__caption">
+        Cornell University
+        <span class="co-host-banner__subcaption">ILR School &middot; {{ site.carow.short_name }}</span>
+      </span>
     </a>
     <span class="co-host-banner__divider" aria-hidden="true">&times;</span>
-    <a class="co-host-banner__plate co-host-banner__plate--dark" href="{{ site.co_host.url }}">
-      <img class="co-host-banner__logo" src="{{ site.co_host.logo | relative_url }}" alt="{{ site.co_host.logo_alt }}">
-      <span class="co-host-banner__caption">{{ site.co_host.name }} ({{ site.co_host.short_name }})</span>
+    <a class="co-host-banner__inst" href="{{ site.co_host.url }}">
+      <img class="co-host-banner__crest" src="{{ '/assets/images/uoft-crest-icon-white.svg' | relative_url }}" alt="University of Toronto">
+      <span class="co-host-banner__caption">
+        University of Toronto
+        <span class="co-host-banner__subcaption">{{ site.co_host.short_name }}</span>
+      </span>
     </a>
   </div>
 </section>
