@@ -152,6 +152,17 @@ a:hover { color: var(--carow-red); }
   flex-wrap: wrap;
 }
 .site-footer__logo { height: 32px; width: auto; }
+.site-footer__crest-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.55);
+  flex-shrink: 0;
+}
+.site-footer__crest-badge img { width: 60%; height: 60%; object-fit: contain; }
 .site-footer__text a { color: #fff; }
 .site-footer__text p { margin: 0.25rem 0; font-size: 0.9rem; }
 
