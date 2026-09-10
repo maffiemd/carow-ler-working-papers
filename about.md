@@ -13,8 +13,6 @@ permalink: /about/
   the {{ site.co_host.parent }}, a leading Canadian center for research and graduate education
   in industrial relations and human resources.
 
-{% include co-host-banner.html %}
-
 This series is a joint applied-research output focused specifically on industrial relations
 and employment relations — distinct from CAROW's other research hubs (AI and Work, Care
 Economy, Workforce Mental Health) — though cross-cutting submissions are welcome.

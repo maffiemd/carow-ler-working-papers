@@ -92,59 +92,6 @@ a:hover { color: var(--carow-red); }
 .hero__text h1 { margin: 0 0 0.5rem; font-size: 1.9rem; }
 .hero__tagline { color: var(--muted); font-size: 1.1rem; margin: 0; }
 
-.co-host-banner {
-  max-width: 960px;
-  margin: 0 auto 2.5rem;
-  padding: 0 1.5rem;
-}
-.co-host-banner__label {
-  text-align: center;
-  font-size: 0.8rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--muted);
-  margin: 0 0 0.85rem;
-}
-.co-host-banner__plate {
-  background: #1a1a1a;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 2.5rem;
-  padding: 2rem 1.5rem;
-  flex-wrap: wrap;
-}
-.co-host-banner__inst {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.75rem;
-  text-decoration: none;
-}
-.co-host-banner__crest { height: 68px; width: auto; }
-.co-host-banner__caption {
-  display: block;
-  font-family: var(--font-serif);
-  font-weight: 700;
-  font-size: 1rem;
-  color: #fff;
-  text-align: center;
-  line-height: 1.5;
-}
-.co-host-banner__subcaption {
-  display: block;
-  font-family: var(--font-sans);
-  font-weight: 400;
-  font-size: 0.8rem;
-  color: rgba(255, 255, 255, 0.7);
-}
-.co-host-banner__divider {
-  font-family: var(--font-serif);
-  font-size: 1.75rem;
-  color: rgba(255, 255, 255, 0.4);
-}
-
 .scope-note { margin-bottom: 2.5rem; }
 
 .paper-list { list-style: none; margin: 0; padding: 0; }
@@ -274,11 +221,6 @@ a:hover { color: var(--carow-red); }
   .hero__text { padding-top: 1.25rem; }
   .hero__text h1 { font-size: 1.4rem; }
 
-  .co-host-banner__plate { padding: 1.5rem 1rem; gap: 1.25rem; }
-  .co-host-banner__crest { height: 52px; }
-  .co-host-banner__caption { font-size: 0.9rem; }
-  .co-host-banner__subcaption { font-size: 0.72rem; }
-  .co-host-banner__divider { display: none; }
   .hero__tagline { font-size: 1rem; }
 
   .page h1 { font-size: 1.35rem; }
