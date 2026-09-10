@@ -151,7 +151,6 @@ a:hover { color: var(--carow-red); }
   gap: 1.5rem;
   flex-wrap: wrap;
 }
-.site-footer__logo { height: 32px; width: auto; }
 .site-footer__crest-badge {
   display: inline-flex;
   align-items: center;
@@ -163,7 +162,7 @@ a:hover { color: var(--carow-red); }
   flex-shrink: 0;
 }
 .site-footer__crest-badge img { width: 60%; height: 60%; object-fit: contain; }
-.site-footer__uoft-mark {
+.site-footer__inst-mark {
   display: inline-flex;
   align-items: center;
   gap: 0.65rem;
