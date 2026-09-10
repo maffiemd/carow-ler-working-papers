@@ -1,24 +1,22 @@
 <header class="site-header">
   <div class="site-header__inner">
-    <a class="site-header__brand" href="{{ '/' | relative_url }}">
-      <span class="site-header__crest-badge site-header__crest-badge--cornell">
-        <img src="{{ '/assets/images/cornell-seal-red.svg' | relative_url }}" alt="Cornell University">
-      </span>
-      <span class="site-header__title">
+    <div class="site-header__brand">
+      <a class="site-header__crest-badge site-header__crest-badge--cornell" href="{{ site.carow.url }}" title="{{ site.carow.name }} (CAROW)">
+        <img src="{{ '/assets/images/cornell-seal-red.svg' | relative_url }}" alt="Cornell University / CAROW">
+      </a>
+      <a class="site-header__title" href="{{ '/' | relative_url }}">
         <span class="site-header__title-main">{{ site.short_title }}</span>
         <span class="site-header__title-sub">{{ site.carow.parent }} &times; {{ site.co_host.parent }}</span>
-      </span>
-      <span class="site-header__crest-badge site-header__crest-badge--uoft">
-        <img src="{{ '/assets/images/uoft-crest-icon-navy.svg' | relative_url }}" alt="University of Toronto">
-      </span>
-    </a>
+      </a>
+      <a class="site-header__crest-badge site-header__crest-badge--uoft" href="{{ site.co_host.url }}" title="{{ site.co_host.name }} (CIRHR)">
+        <img src="{{ '/assets/images/uoft-crest-icon-navy.svg' | relative_url }}" alt="University of Toronto / CIRHR">
+      </a>
+    </div>
     <nav class="site-header__nav">
       <a href="{{ '/papers/' | relative_url }}">Papers</a>
       <a href="{{ '/submit/' | relative_url }}">Submit</a>
       <a href="{{ '/editorial-board/' | relative_url }}">Editorial Board</a>
       <a href="{{ '/subscribe/' | relative_url }}">Subscribe</a>
-      <a href="{{ site.carow.url }}">CAROW</a>
-      <a href="{{ site.co_host.url }}">CIRHR</a>
     </nav>
   </div>
 </header>
