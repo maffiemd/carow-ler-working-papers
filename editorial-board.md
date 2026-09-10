@@ -10,4 +10,5 @@ permalink: /editorial-board/
 
 ## Editorial Board
 
-_TBD — list additional board members here as they're confirmed._
+_TBD — list additional board members here as they're confirmed, drawn from both CAROW
+(Cornell) and CIRHR (University of Toronto)._

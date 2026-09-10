@@ -1,6 +1,7 @@
 :root {
   --carow-red: #B31B1B;
   --carow-red-dark: #8C1515;
+  --uoft-blue: #002A5C;
   --ink: #222222;
   --muted: #5b5b5b;
   --border: #e0e0e0;
@@ -43,7 +44,20 @@ a:hover { color: var(--carow-red); }
   text-decoration: none;
   color: var(--ink);
 }
-.site-header__logo { height: 40px; width: auto; }
+.site-header__crests { display: flex; align-items: center; gap: 0.4rem; }
+.site-header__crest-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--bg-alt);
+  flex-shrink: 0;
+}
+.site-header__crest-badge--cornell { border: 2px solid var(--carow-red); }
+.site-header__crest-badge--uoft { border: 2px solid var(--uoft-blue); }
+.site-header__crest-badge img { width: 60%; height: 60%; object-fit: contain; }
 .site-header__title { display: flex; flex-direction: column; }
 .site-header__title-main { font-weight: 700; font-size: 1.1rem; }
 .site-header__title-sub { font-size: 0.8rem; color: var(--muted); }
@@ -138,6 +152,28 @@ a:hover { color: var(--carow-red); }
   flex-wrap: wrap;
 }
 .site-footer__logo { height: 32px; width: auto; }
+.site-footer__crest-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.55);
+  flex-shrink: 0;
+}
+.site-footer__crest-badge img { width: 60%; height: 60%; object-fit: contain; }
+.site-footer__uoft-mark {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+.site-footer__crest-label {
+  font-family: var(--font-serif);
+  font-size: 1.1rem;
+  color: #fff;
+  white-space: nowrap;
+}
 .site-footer__text a { color: #fff; }
 .site-footer__text p { margin: 0.25rem 0; font-size: 0.9rem; }
 
@@ -196,7 +232,7 @@ a:hover { color: var(--carow-red); }
 
 @media (max-width: 600px) {
   .site-header__inner { padding: 0.85rem 1rem; gap: 0.6rem; }
-  .site-header__logo { height: 32px; }
+  .site-header__crest-badge { width: 32px; height: 32px; }
   .site-header__title-main { font-size: 1rem; }
   .site-header__title-sub { font-size: 0.72rem; }
   .site-header__nav { gap: 0.4rem 0.9rem; font-size: 0.9rem; }
@@ -206,6 +242,7 @@ a:hover { color: var(--carow-red); }
   .hero__banner { max-height: 160px; border-radius: 0; }
   .hero__text { padding-top: 1.25rem; }
   .hero__text h1 { font-size: 1.4rem; }
+
   .hero__tagline { font-size: 1rem; }
 
   .page h1 { font-size: 1.35rem; }
