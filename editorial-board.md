@@ -4,11 +4,14 @@ title: Editorial Board
 permalink: /editorial-board/
 ---
 
-## Series Editor
+## Editors
 
-**{{ site.editor.name }}** — _TBD (affiliation)_
+{% for person in site.editors %}
+- **{{ person.name }}** — {{ person.affiliation }}
+{% endfor %}
 
 ## Editorial Board
 
-_TBD — list additional board members here as they're confirmed, drawn from both CAROW
-(Cornell) and CIRHR (University of Toronto)._
+{% for person in site.editorial_board %}
+- **{{ person.name }}** — {{ person.affiliation }}
+{% endfor %}

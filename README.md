@@ -142,7 +142,9 @@ Invocations** in the dashboard for a `200` response and confirm the email arrive
 
 Scaffolded; not yet publicly launched. Outstanding before launch:
 
-- [ ] Confirm series editor and editorial board (see `editorial-board.md`)
+- [x] Confirm series editors and editorial board (see `editorial-board.md`)
+- [ ] Set a real `contact_email` in `_config.yml` — submission/contact links are inert
+      placeholders (`mailto:TBD`) until this is set
 - [x] Confirm submission eligibility — open to all IR/ER scholars and students, in scope
 - [x] Set up Supabase + Resend for the mailing list — live, including owner notifications
 - [ ] Register with RePEc; consider SSRN mirroring

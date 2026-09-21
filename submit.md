@@ -26,11 +26,13 @@ is that the paper fits the scope above.
 
 ## Review process
 
-Submissions are read by the series editor (and, where relevant, a member of the editorial
-board) for fit and basic quality. This is **not** a peer-reviewed venue — the goal is to
-circulate work-in-progress for feedback ahead of formal journal submission. Typical turnaround
-is _TBD_.
+Submissions are read by the series editors (and, where relevant, a member of the
+[editorial board]({{ '/editorial-board/' | relative_url }})) for fit and basic quality. This
+is **not** a peer-reviewed venue — the goal is to circulate work-in-progress for feedback
+ahead of formal journal submission. Typical turnaround is _TBD_.
 
 ## How to submit
 
-Email your PDF and a short cover note to **{{ site.editor.email }}**.
+Email your PDF and a short cover note to the series editors,
+{% for person in site.editors %}{{ person.name }}{% unless forloop.last %} and {% endunless %}{% endfor %},
+at **{{ site.contact_email }}**.
