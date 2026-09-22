@@ -26,21 +26,21 @@ co_host:
 
 editors:
   - name: "Kortney Koebel"
-    affiliation: "University of Toronto"
+    affiliation: "University of Toronto, Centre for Industrial Relations and Human Resource Management"
   - name: "Michael Maffie"
     affiliation: "Cornell University, Johnson Graduate School of Management"
 
 editorial_board:
   - name: "Ariel Avgar"
-    affiliation: "ILR School, Cornell University"
+    affiliation: "Cornell University, ILR School"
   - name: "Rafael Gomez"
-    affiliation: "Centre for Industrial Relations and Human Resource Management, University of Toronto"
+    affiliation: "University of Toronto, Centre for Industrial Relations and Human Resource Management"
   - name: "Sean O'Brady"
-    affiliation: "McMaster University"
+    affiliation: "McMaster University, DeGroote School of Business"
   - name: "Jenna Myers"
-    affiliation: "Centre for Industrial Relations and Human Resource Management, University of Toronto"
+    affiliation: "University of Toronto, Centre for Industrial Relations and Human Resource Management"
   - name: "Shannon Potter"
-    affiliation: "Université Laval"
+    affiliation: "Université Laval, Département des Relations Industrielles"
 
 contact_email: "TBD"
 
