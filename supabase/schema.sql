@@ -38,3 +38,47 @@ as $$
 $$;
 
 grant execute on function unsubscribe(uuid) to anon;
+
+-- Editorial dashboard: tracks submissions from intake through publication.
+-- Only the two invited editors ever have Supabase Auth accounts (sign-up is
+-- disabled), so a blanket "authenticated" check is sufficient - there's no
+-- need for per-row ownership checks. The anon (public) key gets no policy
+-- at all here, so the dashboard's data is invisible to the public site.
+create table if not exists submissions (
+  id uuid primary key default gen_random_uuid(),
+  title text not null,
+  -- Each entry: {name, affiliation, email}. Email is kept here (not in the
+  -- published _papers front matter) purely so scripts/notify-author-accepted.js
+  -- knows where to send the acceptance email.
+  authors jsonb not null default '[]'::jsonb,
+  abstract text,
+  assigned_to text,
+  received_date date not null default current_date,
+  status text not null default 'submitted'
+    check (status in ('submitted', 'under_review', 'accepted', 'rejected', 'published')),
+  decision_notes text,
+  wp_number text,
+  manuscript_path text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+alter table submissions enable row level security;
+
+create policy "editors can manage submissions" on submissions
+  for all
+  using (auth.role() = 'authenticated')
+  with check (auth.role() = 'authenticated');
+
+-- Manuscript PDFs. Uploaded and read only by signed-in editors; never
+-- exposed to the public site (the publish pipeline reads them via a
+-- short-lived signed URL generated server-side by the publish-submission
+-- Edge Function, not through this bucket's own access policy).
+insert into storage.buckets (id, name, public)
+values ('manuscripts', 'manuscripts', false)
+on conflict (id) do nothing;
+
+create policy "editors can manage manuscript files" on storage.objects
+  for all
+  using (bucket_id = 'manuscripts' and auth.role() = 'authenticated')
+  with check (bucket_id = 'manuscripts' and auth.role() = 'authenticated');

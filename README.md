@@ -138,6 +138,62 @@ sends the email via Resend.
 Test it by subscribing on the live site, then check **Edge Functions → notify-owner →
 Invocations** in the dashboard for a `200` response and confirm the email arrived.
 
+## Editorial dashboard
+
+A private, sign-in-gated page at `/dashboard/` (not linked from the public nav — real
+security is Supabase Auth + Row Level Security, not obscurity) where editors track
+submissions from intake through publication, and publish accepted papers with one click.
+
+- **Auth**: Supabase Auth, invite-only. Only the two series editors have accounts; public
+  sign-up is never enabled.
+- **Data**: a `submissions` table and a private `manuscripts` Storage bucket (see
+  `supabase/schema.sql`), both restricted to authenticated users only.
+- **Intake is manual**: editors add each submission by hand (authors keep emailing the PDF
+  per the Submit page) — there's no public upload form.
+- **Publishing**: clicking "Accept & Publish" calls the `publish-submission` Edge Function,
+  which asks GitHub (via `repository_dispatch`) to build the cover sheet and publish — reusing
+  the exact same `scripts/generate-cover-sheet.js` the manual CLI publish path
+  (`scripts/publish-paper.js`) already relies on — then emails the author(s) directly once
+  it's live. See `.github/workflows/publish-submission.yml`.
+
+### One-time setup
+
+**1. Database & Storage** — run the `submissions` table, its RLS policy, and the
+`manuscripts` bucket from [`supabase/schema.sql`](supabase/schema.sql) (the block added after
+the mailing-list schema) in the Supabase SQL Editor, same as the original setup.
+
+**2. Invite the editors** — run once per editor, using the service_role key (Project Settings
+→ API):
+```bash
+SUPABASE_URL=https://gfiqcuznnmzpvnpynbxj.supabase.co \
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key \
+node scripts/invite-editors.js "Kortney Koebel <email>" "Michael Maffie <email>"
+```
+Each editor gets an email with a link to set their own password — neither you nor this
+script ever sees or sets one.
+
+**3. GitHub Personal Access Token** — the Edge Function needs a token that can trigger
+`repository_dispatch` on this repo (classic PAT with `repo` scope, or fine-grained with
+Contents: Read and write). Create one at
+[github.com/settings/tokens](https://github.com/settings/tokens), then set it as an Edge
+Function secret (never paste it into chat):
+```bash
+supabase secrets set GITHUB_PAT=your_token_here
+```
+
+**4. Deploy the Edge Function**:
+```bash
+supabase functions deploy publish-submission
+```
+(No `--no-verify-jwt` here, unlike `notify-owner` — this one *should* require a valid
+signed-in session, since it's called by the dashboard on the editor's behalf.)
+
+Test the whole flow by adding a real test submission on `/dashboard/`, clicking
+**Accept & Publish**, and confirming: the paper appears on the live site with a correct
+cover sheet, the author's email arrives, and the submission's status flips to `published` in
+Supabase's Table Editor. Same cleanup pattern as the original notification-pipeline test —
+delete the test `_papers`/`pdfs` files afterward if you don't want it live.
+
 ## Status
 
 Scaffolded; not yet publicly launched. Outstanding before launch:
@@ -147,5 +203,8 @@ Scaffolded; not yet publicly launched. Outstanding before launch:
       placeholders (`mailto:TBD`) until this is set
 - [x] Confirm submission eligibility — open to all IR/ER scholars and students, in scope
 - [x] Set up Supabase + Resend for the mailing list — live, including owner notifications
+- [ ] Run the `submissions`/`manuscripts` schema addition, invite the two editors, set the
+      `GITHUB_PAT` Edge Function secret, and deploy `publish-submission` (see "Editorial
+      dashboard" above) — the dashboard UI is built but inert until this is done
 - [ ] Register with RePEc; consider SSRN mirroring
 - [ ] Link to this site from ilr.cornell.edu/carow

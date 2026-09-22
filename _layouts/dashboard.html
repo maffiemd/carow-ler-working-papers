@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon" type="image/svg+xml" href="{{ '/assets/images/carow-logo.svg' | relative_url }}">
+  <title>{{ page.title }} | {{ site.short_title }}</title>
+  <link rel="stylesheet" href="{{ '/assets/css/main.css' | relative_url }}">
+  <link rel="stylesheet" href="{{ '/assets/css/dashboard.css' | relative_url }}">
+</head>
+<body class="dashboard-body">
+  <header class="dashboard-header">
+    <a class="dashboard-header__brand" href="{{ '/' | relative_url }}">{{ site.short_title }} &middot; Editorial Dashboard</a>
+    <button type="button" id="dashboard-sign-out" class="dashboard-header__sign-out" hidden>Sign out</button>
+  </header>
+  <main class="dashboard-main">
+    {{ content }}
+  </main>
+
+  {% assign editor_names = site.editors | map: "name" %}
+  {% assign board_names = site.editorial_board | map: "name" %}
+  {% assign roster = editor_names | concat: board_names %}
+  <script>
+    window.SUPABASE_URL = {{ site.supabase_url | jsonify }};
+    window.SUPABASE_ANON_KEY = {{ site.supabase_anon_key | jsonify }};
+    window.EDITOR_ROSTER = {{ roster | jsonify }};
+  </script>
+  <script src="{{ '/assets/js/vendor/supabase.min.js' | relative_url }}"></script>
+  <script src="{{ '/assets/js/supabase-client.js' | relative_url }}"></script>
+  <script src="{{ '/assets/js/dashboard.js' | relative_url }}"></script>
+</body>
+</html>

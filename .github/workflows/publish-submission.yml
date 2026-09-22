@@ -1,0 +1,64 @@
+name: Publish Submission
+
+on:
+  repository_dispatch:
+    types: [publish-submission]
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install script dependencies
+        working-directory: scripts
+        run: npm install
+
+      - name: Download manuscript
+        run: curl -sL --fail "${{ github.event.client_payload.manuscript_url }}" -o /tmp/manuscript.pdf
+
+      - name: Build front matter and cover sheet
+        run: node scripts/publish-submission.js
+        env:
+          SLUG: ${{ github.event.client_payload.slug }}
+          WP_NUMBER: ${{ github.event.client_payload.wp_number }}
+          TITLE: ${{ github.event.client_payload.title }}
+          AUTHORS_JSON: ${{ toJson(github.event.client_payload.authors) }}
+          ABSTRACT: ${{ github.event.client_payload.abstract }}
+          MANUSCRIPT_PATH: /tmp/manuscript.pdf
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "_papers/${{ github.event.client_payload.slug }}.md" "pdfs/${{ github.event.client_payload.slug }}.pdf"
+          git commit -m "Publish working paper: ${{ github.event.client_payload.title }} (${{ github.event.client_payload.wp_number }})"
+          git push
+
+      - name: Notify author(s)
+        run: node scripts/notify-author-accepted.js
+        env:
+          TITLE: ${{ github.event.client_payload.title }}
+          WP_NUMBER: ${{ github.event.client_payload.wp_number }}
+          SLUG: ${{ github.event.client_payload.slug }}
+          AUTHORS_JSON: ${{ toJson(github.event.client_payload.authors) }}
+          SERIES_PREFIX: ${{ vars.SERIES_PREFIX }}
+          SITE_URL: ${{ vars.SITE_URL }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          FROM_EMAIL: ${{ vars.FROM_EMAIL }}
+          REPLY_TO: ${{ vars.REPLY_TO }}
+
+      - name: Mark submission published in Supabase
+        run: |
+          curl -sf -X PATCH "${{ secrets.SUPABASE_URL }}/rest/v1/submissions?id=eq.${{ github.event.client_payload.submission_id }}" \
+            -H "apikey: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d '{"status":"published"}'
