@@ -31,12 +31,14 @@ editors:
     affiliation: "Cornell University, Johnson Graduate School of Management"
 
 editorial_board:
+  - name: "Ariel Avgar"
+    affiliation: "ILR School, Cornell University"
   - name: "Rafael Gomez"
-    affiliation: "University of Toronto"
+    affiliation: "Centre for Industrial Relations and Human Resource Management, University of Toronto"
   - name: "Sean O'Brady"
     affiliation: "McMaster University"
   - name: "Jenna Myers"
-    affiliation: "University of Toronto"
+    affiliation: "Centre for Industrial Relations and Human Resource Management, University of Toronto"
   - name: "Shannon Potter"
     affiliation: "Université Laval"
 
