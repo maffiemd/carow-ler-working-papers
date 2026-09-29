@@ -105,10 +105,14 @@ workflow) and a `test_email` input before sending to real subscribers.
 ### Owner notifications (get emailed when someone subscribes)
 
 Subscribing happens directly between the browser and Supabase (no server code in the loop —
-see `assets/js/subscribe.js`), so catching the event to email yourself requires a Supabase
-[Database Webhook](https://supabase.com/docs/guides/database/webhooks) that calls a small
-Edge Function ([`supabase/functions/notify-owner`](supabase/functions/notify-owner)), which
-sends the email via Resend.
+see `assets/js/subscribe.js`), so catching the event to email yourself (and to send the new
+subscriber a welcome email — see `supabase/functions/notify-owner/welcome-email.ts`) requires
+something server-side to react to the insert. That's the `notify-owner` Edge Function
+([`supabase/functions/notify-owner`](supabase/functions/notify-owner)), triggered by a plain
+Postgres trigger using `pg_net` directly — see the block near the bottom of
+[`supabase/schema.sql`](supabase/schema.sql) — rather than the dashboard's "Database Webhooks"
+UI, which depends on a one-time platform schema bootstrap that has been unreliable in practice
+(`ERROR: 3F000: schema "supabase_functions" does not exist` if that bootstrap didn't run).
 
 1. Deploy the function (requires the [Supabase CLI](https://supabase.com/docs/guides/cli),
    logged in and linked to your project):
@@ -126,17 +130,19 @@ sends the email via Resend.
    ```
    (`NOTIFY_FROM_EMAIL` can stay on Resend's shared testing address — owner notifications
    always go to your own verified `OWNER_EMAIL`, so they work even before you verify a
-   sending domain for `FROM_EMAIL` above.)
-3. In the Supabase dashboard, go to **Database → Webhooks**. If this is the first Database
-   Webhook on the project, click **Install integration** first (enables the `pg_net`
-   extension and bootstraps the schema the webhook trigger needs).
-4. Create one hook: `HTTP Request` / `POST` to your function's URL (shown after deploy, looks
-   like `https://gfiqcuznnmzpvnpynbxj.supabase.co/functions/v1/notify-owner`), table
-   `subscribers`, event `Insert`, with an `x-webhook-secret` header set to the same
-   `WEBHOOK_SECRET` value from step 2.
+   sending domain for `FROM_EMAIL` above. Note the actual `WEBHOOK_SECRET` value this command
+   generates — you'll need it in the next step, and Supabase never shows it back to you again.)
+3. In the SQL Editor, run the trigger block from `supabase/schema.sql` (the part after the
+   `submissions`/`manuscripts` block), first replacing `REPLACE_WITH_WEBHOOK_SECRET_VALUE`
+   with the actual value from step 2. If you ever rotate `WEBHOOK_SECRET`, re-run this block
+   with the new value — `create or replace function` and the `drop trigger if exists` make it
+   safe to run again.
 
-Test it by subscribing on the live site, then check **Edge Functions → notify-owner →
-Invocations** in the dashboard for a `200` response and confirm the email arrived.
+Test it by subscribing on the live site (or by invoking the function directly with a synthetic
+payload, header `x-webhook-secret: <value>`, body
+`{"table":"subscribers","type":"INSERT","record":{"email":"you@example.com","unsubscribe_token":"test"}}`),
+then check **Edge Functions → notify-owner → Invocations** in the dashboard for a `200`
+response and confirm both emails arrived.
 
 ## Editorial dashboard
 

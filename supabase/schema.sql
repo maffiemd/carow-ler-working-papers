@@ -82,3 +82,45 @@ create policy "editors can manage manuscript files" on storage.objects
   for all
   using (bucket_id = 'manuscripts' and auth.role() = 'authenticated')
   with check (bucket_id = 'manuscripts' and auth.role() = 'authenticated');
+
+-- Calls the notify-owner Edge Function whenever a new row lands in
+-- `subscribers`, using pg_net directly instead of the dashboard's "Database
+-- Webhooks" UI. That UI depends on a one-time platform-managed schema
+-- bootstrap (clicking "Install integration") that has been unreliable in
+-- practice - this trigger does the exact same thing (an async HTTP POST via
+-- pg_net) without depending on it.
+--
+-- Before running: replace REPLACE_WITH_WEBHOOK_SECRET_VALUE below with the
+-- same value set as the notify-owner function's WEBHOOK_SECRET secret (see
+-- "Owner notifications" in the README). Never commit the real value here -
+-- this file is public.
+create extension if not exists pg_net;
+
+create or replace function notify_new_subscriber()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  perform net.http_post(
+    url := 'https://gfiqcuznnmzpvnpynbxj.supabase.co/functions/v1/notify-owner',
+    headers := jsonb_build_object(
+      'Content-Type', 'application/json',
+      'x-webhook-secret', 'REPLACE_WITH_WEBHOOK_SECRET_VALUE'
+    ),
+    body := jsonb_build_object(
+      'table', 'subscribers',
+      'type', 'INSERT',
+      'record', to_jsonb(NEW)
+    )
+  );
+  return NEW;
+end;
+$$;
+
+drop trigger if exists subscribers_notify_on_insert on subscribers;
+create trigger subscribers_notify_on_insert
+after insert on subscribers
+for each row
+execute function notify_new_subscriber();
