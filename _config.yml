@@ -46,7 +46,7 @@ editorial_board:
   - name: "Shannon Potter"
     affiliation: "Université Laval, Département des Relations Industrielles"
 
-contact_email: "TBD"
+contact_email: "kourtney.koebel@utoronto.ca or maffie@cornell.edu"
 
 # Supabase project settings used by assets/js/supabase-client.js.
 # The anon key is intentionally public: Row Level Security only lets it
