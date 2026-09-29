@@ -167,7 +167,7 @@ the mailing-list schema) in the Supabase SQL Editor, same as the original setup.
 ```bash
 SUPABASE_URL=https://gfiqcuznnmzpvnpynbxj.supabase.co \
 SUPABASE_SERVICE_ROLE_KEY=your_service_role_key \
-node scripts/invite-editors.js "Kortney Koebel <email>" "Michael Maffie <email>"
+node scripts/invite-editors.js "Kourtney Koebel <email>" "Michael Maffie <email>"
 ```
 Each editor gets an email with a link to set their own password — neither you nor this
 script ever sees or sets one.

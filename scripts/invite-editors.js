@@ -5,7 +5,7 @@
 // Run locally, once per new editor:
 //   SUPABASE_URL=https://xxxx.supabase.co \
 //   SUPABASE_SERVICE_ROLE_KEY=... \
-//   node scripts/invite-editors.js "Kortney Koebel <kortney@example.com>" "Michael Maffie <mdm283@cornell.edu>"
+//   node scripts/invite-editors.js "Kourtney Koebel <kourtney@example.com>" "Michael Maffie <mdm283@cornell.edu>"
 //
 // The service role key is in the Supabase dashboard under
 // Project Settings -> API -> service_role key. Never commit it or paste it

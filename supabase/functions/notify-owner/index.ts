@@ -1,16 +1,23 @@
-// Supabase Database Webhook target: emails OWNER_EMAIL whenever someone
-// subscribes. Subscribing happens directly between the browser and this
-// Supabase project (see assets/js/subscribe.js) with no server code in the
-// loop, so a Database Webhook on the `subscribers` table is the only
-// reliable place to catch the event.
+// Supabase Database Webhook target: emails OWNER_EMAIL and sends a welcome
+// email to the new subscriber whenever someone subscribes. Subscribing
+// happens directly between the browser and this Supabase project (see
+// assets/js/subscribe.js) with no server code in the loop, so a Database
+// Webhook on the `subscribers` table is the only reliable place to catch
+// the event.
+//
+// The welcome email's copy lives in ./welcome-email.ts - edit that file to
+// change what a new subscriber sees.
 //
 // One-time setup: see "Owner notifications" in the README.
+
+import { WELCOME_EMAIL_SUBJECT } from "./welcome-email.ts";
+import { renderWelcomeEmailHtml } from "./render-welcome-email.ts";
 
 function siteUrl(): string {
   return (Deno.env.get("SITE_URL") ?? "").replace(/\/$/, "");
 }
 
-async function sendEmail(to: string, subject: string, text: string) {
+async function sendEmail(to: string, subject: string, body: { text?: string; html?: string }) {
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {
@@ -21,7 +28,7 @@ async function sendEmail(to: string, subject: string, text: string) {
       from: Deno.env.get("NOTIFY_FROM_EMAIL"),
       to,
       subject,
-      text,
+      ...body,
     }),
   });
 
@@ -45,11 +52,18 @@ Deno.serve(async (req) => {
   }
 
   const ownerEmail = Deno.env.get("OWNER_EMAIL")!;
-  const subject = `New subscriber: ${record.email}`;
-  const text = `${record.email} just subscribed to ${siteUrl() || "the CAROW LER Working Papers mailing list"}.\n\n${new Date().toUTCString()}`;
+  const ownerSubject = `New subscriber: ${record.email}`;
+  const ownerText = `${record.email} just subscribed to ${siteUrl() || "the CAROW LER Working Papers mailing list"}.\n\n${new Date().toUTCString()}`;
 
-  const ok = await sendEmail(ownerEmail, subject, text);
-  if (!ok) {
+  const unsubscribeLink = `${siteUrl()}/unsubscribe/?token=${record.unsubscribe_token}`;
+  const papersLink = `${siteUrl()}/papers/`;
+
+  const results = await Promise.all([
+    sendEmail(ownerEmail, ownerSubject, { text: ownerText }),
+    sendEmail(record.email, WELCOME_EMAIL_SUBJECT, { html: renderWelcomeEmailHtml(papersLink, unsubscribeLink) }),
+  ]);
+
+  if (results.some((ok) => !ok)) {
     return new Response("email send failed", { status: 502 });
   }
 
