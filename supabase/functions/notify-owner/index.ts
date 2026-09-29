@@ -56,11 +56,10 @@ Deno.serve(async (req) => {
   const ownerText = `${record.email} just subscribed to ${siteUrl() || "the CAROW LER Working Papers mailing list"}.\n\n${new Date().toUTCString()}`;
 
   const unsubscribeLink = `${siteUrl()}/unsubscribe/?token=${record.unsubscribe_token}`;
-  const papersLink = `${siteUrl()}/papers/`;
 
   const results = await Promise.all([
     sendEmail(ownerEmail, ownerSubject, { text: ownerText }),
-    sendEmail(record.email, WELCOME_EMAIL_SUBJECT, { html: renderWelcomeEmailHtml(papersLink, unsubscribeLink) }),
+    sendEmail(record.email, WELCOME_EMAIL_SUBJECT, { html: renderWelcomeEmailHtml(siteUrl(), unsubscribeLink) }),
   ]);
 
   if (results.some((ok) => !ok)) {

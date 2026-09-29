@@ -13,7 +13,11 @@ const COLOR_INK = "#222222";
 const COLOR_MUTED = "#5b5b5b";
 const COLOR_BORDER = "#e0e0e0";
 
-export function renderWelcomeEmailHtml(papersLink: string, unsubscribeLink: string) {
+export function renderWelcomeEmailHtml(siteUrl: string, unsubscribeLink: string) {
+  const papersLink = `${siteUrl}/papers/`;
+  const carowLogoUrl = `${siteUrl}/assets/images/carow-logo-email.png`;
+  const uoftCrestUrl = `${siteUrl}/assets/images/uoft-crest-email.png`;
+
   const paragraphs = WELCOME_EMAIL_BODY.trim()
     .split(/\n\s*\n/)
     .map((p) => `<p style="margin:0 0 1em;">${p.trim()}</p>`)
@@ -23,6 +27,13 @@ export function renderWelcomeEmailHtml(papersLink: string, unsubscribeLink: stri
 <html>
   <body style="margin:0;padding:0;background:#ffffff;font-family:Georgia,'Times New Roman',serif;color:${COLOR_INK};">
     <div style="max-width:640px;margin:0 auto;padding:32px 20px;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;">
+        <tr>
+          <td align="left"><img src="${carowLogoUrl}" width="180" height="44" alt="CAROW" style="display:block;"></td>
+          <td align="right"><img src="${uoftCrestUrl}" width="21" height="44" alt="University of Toronto" style="display:block;margin-left:auto;"></td>
+        </tr>
+      </table>
+      <hr style="margin:0 0 20px;border:none;border-top:1px solid ${COLOR_BORDER};">
       <h1 style="font-size:1.3rem;color:${COLOR_RED};">${WELCOME_EMAIL_SUBJECT}</h1>
       <div style="font-size:1.05rem;line-height:1.6;">${paragraphs}</div>
       <p style="margin-top:24px;">
