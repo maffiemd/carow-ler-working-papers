@@ -17,7 +17,12 @@ function siteUrl(): string {
   return (Deno.env.get("SITE_URL") ?? "").replace(/\/$/, "");
 }
 
-async function sendEmail(to: string, subject: string, body: { text?: string; html?: string }) {
+async function sendEmail(
+  to: string,
+  subject: string,
+  body: { text?: string; html?: string },
+  replyTo?: string,
+) {
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {
@@ -28,6 +33,7 @@ async function sendEmail(to: string, subject: string, body: { text?: string; htm
       from: Deno.env.get("NOTIFY_FROM_EMAIL"),
       to,
       subject,
+      ...(replyTo ? { reply_to: replyTo } : {}),
       ...body,
     }),
   });
@@ -57,9 +63,16 @@ Deno.serve(async (req) => {
 
   const unsubscribeLink = `${siteUrl()}/unsubscribe/?token=${record.unsubscribe_token}`;
 
+  const replyTo = Deno.env.get("REPLY_TO");
+
   const results = await Promise.all([
     sendEmail(ownerEmail, ownerSubject, { text: ownerText }),
-    sendEmail(record.email, WELCOME_EMAIL_SUBJECT, { html: renderWelcomeEmailHtml(siteUrl(), unsubscribeLink) }),
+    sendEmail(
+      record.email,
+      WELCOME_EMAIL_SUBJECT,
+      { html: renderWelcomeEmailHtml(siteUrl(), unsubscribeLink) },
+      replyTo,
+    ),
   ]);
 
   if (results.some((ok) => !ok)) {
