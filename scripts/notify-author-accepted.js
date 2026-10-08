@@ -10,7 +10,7 @@
 //   WP_NUMBER
 //   SLUG              e.g. "2026-03-lastname-topic"
 //   SERIES_PREFIX      e.g. "CAROW-LER-WP"
-//   SITE_URL           e.g. "https://maffiemd.github.io/carow-ler-working-papers"
+//   SITE_URL           e.g. "https://workingpapers.ilr.cornell.edu"
 //   RESEND_API_KEY
 //   FROM_EMAIL
 // Optional:

@@ -11,7 +11,7 @@
 //   SUPABASE_SERVICE_ROLE_KEY   server-side key with SELECT access - never expose this in the site's JS
 //   RESEND_API_KEY
 //   FROM_EMAIL                  e.g. "CAROW LER Working Papers <papers@yourdomain.com>"
-//   SITE_URL                    e.g. "https://maffiemd.github.io/carow-ler-working-papers"
+//   SITE_URL                    e.g. "https://workingpapers.ilr.cornell.edu"
 // Optional:
 //   TEST_EMAIL                  if set, sends only to this address instead of querying Supabase
 //   REPLY_TO                    address replies should go to (the sending domain can't receive mail)

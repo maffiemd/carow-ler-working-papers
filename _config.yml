@@ -7,8 +7,8 @@ description: >-
   (CIRHR) at the University of Toronto, circulating new research on industrial relations,
   employment relations, labor-management institutions, collective bargaining, and workplace
   governance.
-url: "https://maffiemd.github.io"
-baseurl: "/carow-ler-working-papers"
+url: "https://workingpapers.ilr.cornell.edu"
+baseurl: ""
 
 series_prefix: "CAROW-LER-WP"
 
