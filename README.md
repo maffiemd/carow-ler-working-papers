@@ -13,9 +13,9 @@ bundle install
 bundle exec jekyll serve --drafts --baseurl ""
 ```
 
-Then visit http://localhost:4000. (The `--baseurl ""` override keeps local links at the
-site root; the production build under `_config.yml`'s `baseurl` serves from
-https://maffiemd.github.io/carow-ler-working-papers/.)
+Then visit http://localhost:4000. The production site is served from
+https://workingpapers.ilr.cornell.edu/ (a custom domain on GitHub Pages; Cornell's ILR Web
+Team manages the `workingpapers` CNAME pointing at `maffiemd.github.io`).
 
 ## Publishing a new paper
 
@@ -94,7 +94,7 @@ Manuscripts must already be PDFs — there's no auto-conversion from Word/other 
   - `RESEND_API_KEY`
 - *Variables* tab, add:
   - `FROM_EMAIL` — e.g. `CAROW LER Working Papers <papers@yourdomain.com>`
-  - `SITE_URL` — `https://maffiemd.github.io/carow-ler-working-papers` (no trailing slash)
+  - `SITE_URL` — `https://workingpapers.ilr.cornell.edu` (no trailing slash)
   - `SERIES_PREFIX` — `CAROW-LER-WP`
   - `REPLY_TO` — optional, an address that can receive mail (the sending domain can't)
 
@@ -125,7 +125,7 @@ UI, which depends on a one-time platform schema bootstrap that has been unreliab
      RESEND_API_KEY=your_resend_api_key \
      NOTIFY_FROM_EMAIL="onboarding@resend.dev" \
      OWNER_EMAIL=mikemaffie@gmail.com \
-     SITE_URL="https://maffiemd.github.io/carow-ler-working-papers" \
+     SITE_URL="https://workingpapers.ilr.cornell.edu" \
      WEBHOOK_SECRET=$(openssl rand -hex 32)
    ```
    (`NOTIFY_FROM_EMAIL` can stay on Resend's shared testing address — owner notifications
