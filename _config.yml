@@ -68,6 +68,13 @@ collections:
 defaults:
   - scope:
       path: ""
+    values:
+      image:
+        path: /assets/images/share-card.png
+        width: 1200
+        height: 630
+  - scope:
+      path: ""
       type: papers
     values:
       layout: paper
