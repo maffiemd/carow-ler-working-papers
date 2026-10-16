@@ -213,8 +213,8 @@ Scaffolded; not yet publicly launched. Outstanding before launch:
       placeholders (`mailto:TBD`) until this is set
 - [x] Confirm submission eligibility — open to all IR/ER scholars and students, in scope
 - [x] Set up Supabase + Resend for the mailing list — live, including owner notifications
-- [ ] Run the `submissions`/`manuscripts` schema addition, invite the two editors, set the
-      `GITHUB_PAT` Edge Function secret, and deploy `publish-submission` (see "Editorial
-      dashboard" above) — the dashboard UI is built but inert until this is done
+- [x] Run the `submissions`/`manuscripts` schema addition, invite the two editors, set the
+      `GITHUB_PAT` Edge Function secret, and deploy `publish-submission` — the editorial
+      dashboard is live at `/dashboard/`
 - [ ] Register with RePEc; consider SSRN mirroring
 - [ ] Link to this site from ilr.cornell.edu/carow

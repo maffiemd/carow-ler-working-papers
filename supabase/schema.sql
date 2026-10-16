@@ -65,6 +65,7 @@ create table if not exists submissions (
 
 alter table submissions enable row level security;
 
+drop policy if exists "editors can manage submissions" on submissions;
 create policy "editors can manage submissions" on submissions
   for all
   using (auth.role() = 'authenticated')
@@ -78,6 +79,7 @@ insert into storage.buckets (id, name, public)
 values ('manuscripts', 'manuscripts', false)
 on conflict (id) do nothing;
 
+drop policy if exists "editors can manage manuscript files" on storage.objects;
 create policy "editors can manage manuscript files" on storage.objects
   for all
   using (bucket_id = 'manuscripts' and auth.role() = 'authenticated')
