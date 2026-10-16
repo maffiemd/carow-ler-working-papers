@@ -205,14 +205,23 @@ Authentication → Users), use `scripts/reinvite-editors.js` instead — same us
 first deletes the stuck account so a fresh invite can be sent (plain `invite-editors.js`
 refuses to resend to an already-registered email).
 
-**4. GitHub Personal Access Token** — the Edge Function needs a token that can trigger
-`repository_dispatch` on this repo (classic PAT with `repo` scope, or fine-grained with
-Contents: Read and write). Create one at
-[github.com/settings/tokens](https://github.com/settings/tokens), then set it as an Edge
-Function secret (never paste it into chat):
-```bash
-supabase secrets set GITHUB_PAT=your_token_here
-```
+**4. GitHub Personal Access Token** — needed in *two* places, same token works for both
+(classic PAT with `repo` scope, or fine-grained with Contents: Read and write). Create one
+at [github.com/settings/tokens](https://github.com/settings/tokens):
+
+- As an Edge Function secret, so it can trigger `repository_dispatch` (never paste it into
+  chat):
+  ```bash
+  supabase secrets set GITHUB_PAT=your_token_here
+  ```
+- As a GitHub Actions repo secret named `WORKFLOW_GITHUB_PAT`, so
+  `.github/workflows/publish-submission.yml` can check out and push with it instead of the
+  default `GITHUB_TOKEN`. This one matters more than it looks: GitHub refuses to let a push
+  authenticated with the default token trigger *other* `on: push` workflows (its anti-loop
+  protection), which would otherwise silently publish the paper's files without ever
+  rebuilding the site or notifying the mailing list. Set via **Settings → Secrets and
+  variables → Actions → New repository secret** on GitHub (or `gh secret set
+  WORKFLOW_GITHUB_PAT` in your own terminal — not here).
 
 **5. Deploy the Edge Function**:
 ```bash
@@ -239,6 +248,9 @@ Scaffolded; not yet publicly launched. Outstanding before launch:
 - [x] Run the `submissions`/`manuscripts` schema addition, invite the two editors, set the
       `GITHUB_PAT` Edge Function secret, and deploy `publish-submission` — the editorial
       dashboard is live at `/dashboard/`
+- [ ] Set the `WORKFLOW_GITHUB_PAT` GitHub Actions repo secret (see "Editorial dashboard"
+      setup, step 4) — without it, "Accept & Publish" commits the paper but silently never
+      rebuilds the site or notifies the mailing list
 - [x] Change `FROM_EMAIL` off the placeholder `grievances@michaelmaffie.com` sender —
       now `CAROW@michaelmaffie.com`, matching the Supabase Auth custom SMTP sender
 - [ ] Register with RePEc; consider SSRN mirroring

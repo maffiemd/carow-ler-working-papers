@@ -11,7 +11,18 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     steps:
+      # Checkout must authenticate with a real PAT, not the default
+      # GITHUB_TOKEN - GitHub deliberately refuses to let a push made with
+      # the default token trigger other on:push workflows (anti-loop
+      # protection), which would otherwise silently prevent this commit
+      # from ever rebuilding the site (pages.yml) or notifying the mailing
+      # list (notify-subscribers.yml). Reuses the same PAT already set as
+      # the Supabase Edge Function's GITHUB_PAT secret (Contents: Read and
+      # write is sufficient for both), just also stored here as a GitHub
+      # Actions secret.
       - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.WORKFLOW_GITHUB_PAT }}
 
       - uses: actions/setup-node@v4
         with:
