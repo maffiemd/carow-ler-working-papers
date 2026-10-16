@@ -13,33 +13,42 @@ see [`README.md`](README.md) instead — this guide assumes that's already done.
 Author emails manuscript
         │
         ▼
-Editor logs it + reviews it (currently: by hand, see "Intake" below)
+Editor logs it in the dashboard (/dashboard/) and reviews it
         │
         ▼
-Editor runs the publish script ──▶ commits + pushes _papers/*.md and pdfs/*.pdf
-        │
+Editor clicks "Accept & Publish" (or runs the CLI script)
+        │          ──▶ commits + pushes _papers/*.md and pdfs/*.pdf
         ▼
 GitHub Actions automatically:
   • rebuilds the site (pages.yml)
   • emails every mailing-list subscriber about the new paper (notify-subscribers.yml)
+  • (dashboard path only) emails the author(s) that their paper is live
         │
         ▼
 Editor (optionally) posts a social announcement (see "Announcing on social media")
 ```
 
-Nothing after "editor runs the publish script" requires manual intervention — the push
-is what triggers everything downstream.
+Nothing after that push requires manual intervention. While testing any of this, turn on
+[staging mode](README.md#staging-mode) first so real subscribers/authors never see a test
+email — see "Testing before you publish for real" below.
 
 ## Intake: logging a new submission
 
-Right now, intake is manual: authors submit by emailing the editors directly (see
-`/submit/`). There's a `/dashboard/` UI built for tracking submissions in one place and
-publishing with one click, but **it isn't wired up yet** — the GitHub token it needs
-hasn't been set as an Edge Function secret. Until that's done (see README → "Editorial
-dashboard" → "One-time setup"), just keep track of submissions by whatever means you're
-already using (email, a shared doc, etc.), and use the CLI workflow below to publish.
+Authors submit by emailing the editors directly (see `/submit/`) — there's no public
+upload form. Log each submission in the dashboard at **[/dashboard/](https://workingpapers.ilr.cornell.edu/dashboard/)**
+(sign in, "Add submission": title, authors, abstract, who it's assigned to, date
+received, and the manuscript PDF). From there you can track status, add decision notes,
+and reassign it as it moves through review — see "Publishing an accepted paper" below for
+what happens once it's accepted.
 
 ## Publishing an accepted paper
+
+**If it's logged in the dashboard**: open it, set a WP number, and click **Accept &
+Publish**. That's it — it builds the cover sheet, commits and pushes, and emails the
+author once it's live, automatically. Skip to "Mint a DOI" below once it's done.
+
+**Otherwise** (or if you'd rather drive it from the terminal), use the CLI path — it does
+the exact same thing under the hood:
 
 1. **Copy the template**:
    ```bash
@@ -82,21 +91,25 @@ already using (email, a shared doc, etc.), and use the CLI workflow below to pub
    [Zenodo](https://zenodo.org) and add the DOI to the paper's front matter in a
    follow-up commit.
 
-That's it — steps 1–3 are the entire publishing workflow.
+That's it — the CLI path is just those steps; the dashboard path is one click.
 
 ## Testing before you publish for real
 
-Don't want to spam the whole mailing list while testing? The notify-subscribers
-workflow can be run by hand against a single test address:
+There's a real subscriber list and real submitted authors in the database — don't test
+against them. Two options:
 
-1. Go to the repo's **Actions** tab → **Notify Subscribers** → **Run workflow**.
-2. Fill in:
-   - `paper_file`: path to the paper, e.g. `_papers/2026-03-lastname-topic.md`
-   - `test_email`: your own address
-3. Run it. Only `test_email` receives the notification — no one else does.
+**Staging mode (recommended)** — set the `STAGING_EMAIL` GitHub Actions repo variable to
+your own address (Settings → Secrets and variables → Actions → Variables), and *every*
+real publish — CLI or dashboard, mailing-list blast or author-acceptance email — redirects
+to just that one address instead of real people, while everything else (site rebuild,
+cover sheet, Supabase status) runs for real. **Delete the variable before actually
+launching**, or every real paper will only ever email you. See "Staging mode" in the
+README for the full explanation.
 
-This is useful for checking that a paper's abstract/author formatting looks right in the
-email before the real push goes out to everyone.
+**One-off resend test** — to just check how an *already-published* paper's notification
+email looks, without touching staging mode: Actions tab → **Notify Subscribers** → **Run
+workflow** → fill in `paper_file` (e.g. `_papers/2026-03-lastname-topic.md`) and
+`test_email` (your address) → Run. Only `test_email` receives it.
 
 ## The mailing list ("the listserv")
 
@@ -142,20 +155,25 @@ If a post genuinely goes out with no image even after waiting, the likely cause 
 Bluesky's link-preview cache being cold for that exact URL for the very first time (rare
 after the first person anywhere has posted it) — just try again a few seconds later.
 
-## The editorial dashboard (not live yet)
+## The editorial dashboard
 
-`/dashboard/` is built — sign-in, a submissions table, an "Accept & Publish" button that
-would do the equivalent of the CLI steps above automatically and email the author
-directly — but it's inert until the one-time setup in the README's "Editorial dashboard"
-section is finished (mainly: setting a GitHub PAT as a Supabase Edge Function secret).
-Once that's done, "Accept & Publish" replaces steps 1–3 above for submissions that came
-in through the dashboard; the CLI workflow will still work for anything logged outside
-it.
+**[workingpapers.ilr.cornell.edu/dashboard/](https://workingpapers.ilr.cornell.edu/dashboard/)**
+— sign-in, a submissions table, and an "Accept & Publish" button that does the equivalent
+of the CLI steps above automatically and emails the author directly once it's live.
+
+**Signing in for the first time**: you'll get an invite email with a 6-digit code, not a
+clickable link — many institutional email systems (Cornell's and UofT's included)
+auto-scan links before you ever see them, which silently burns a one-time link's token.
+On the sign-in page, click **"Have an invite code instead?"** and enter your email, the
+code, and a password of your choosing.
+
+The CLI workflow still works too, for anything logged outside the dashboard.
 
 ## Quick troubleshooting
 
 | Symptom | Likely cause |
 |---|---|
+| A real paper's emails only went to you | `STAGING_EMAIL` repo variable is still set from testing — delete it |
 | Push didn't trigger a subscriber email | Check the file was added under `_papers/` in that push (edits to existing papers don't re-trigger it — only new files) |
 | Site didn't update after pushing | Check the "pages" workflow run in the Actions tab for a build error (often a front-matter YAML typo) |
 | Cover sheet looks wrong | Check `authors`, `title`, `date` in the paper's front matter — the cover sheet is generated entirely from front matter, not from the manuscript PDF |

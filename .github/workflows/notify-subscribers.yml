@@ -54,4 +54,9 @@ jobs:
           REPLY_TO: ${{ vars.REPLY_TO }}
           SITE_URL: ${{ vars.SITE_URL }}
           SERIES_PREFIX: ${{ vars.SERIES_PREFIX }}
-          TEST_EMAIL: ${{ inputs.test_email }}
+          # An explicit per-run test_email (workflow_dispatch) wins; otherwise fall back
+          # to the persistent STAGING_EMAIL repo variable, if set, so the normal
+          # push-triggered path (real CLI/dashboard publishes) also redirects to it
+          # instead of the real subscriber list. Leave STAGING_EMAIL unset for a real
+          # launch - see "Staging mode" in the README.
+          TEST_EMAIL: ${{ inputs.test_email || vars.STAGING_EMAIL }}

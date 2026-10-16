@@ -15,6 +15,9 @@
 //   FROM_EMAIL
 // Optional:
 //   REPLY_TO
+//   STAGING_EMAIL     if set, every author email is redirected here instead
+//                      (subject tagged with the real intended recipient) -
+//                      see "Staging mode" in the README
 
 const { Resend } = require("resend");
 
@@ -40,6 +43,7 @@ async function main() {
   const siteUrl = requireEnv("SITE_URL").replace(/\/$/, "");
   const fromEmail = requireEnv("FROM_EMAIL");
   const replyTo = process.env.REPLY_TO;
+  const stagingEmail = process.env.STAGING_EMAIL;
 
   const resend = new Resend(requireEnv("RESEND_API_KEY"));
   const wpLabel = `${seriesPrefix}-${wpNumber}`;
@@ -53,9 +57,9 @@ Thank you for submitting to the series.`;
 
   const emails = authors.map((author) => ({
     from: fromEmail,
-    to: author.email,
+    to: stagingEmail || author.email,
     ...(replyTo && { reply_to: replyTo }),
-    subject,
+    subject: stagingEmail ? `[STAGING, would go to ${author.email}] ${subject}` : subject,
     text: `Dear ${author.name},\n\n${text}`,
   }));
 
@@ -63,7 +67,11 @@ Thank you for submitting to the series.`;
   if (error) {
     throw new Error(`Resend batch send failed: ${JSON.stringify(error)}`);
   }
-  console.log(`Notified ${authors.length} author(s) about ${wpLabel}.`);
+  if (stagingEmail) {
+    console.log(`STAGING_EMAIL set - redirected ${authors.length} author email(s) to ${stagingEmail}.`);
+  } else {
+    console.log(`Notified ${authors.length} author(s) about ${wpLabel}.`);
+  }
 }
 
 main().catch((error) => {

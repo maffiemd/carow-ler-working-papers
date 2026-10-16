@@ -233,8 +233,35 @@ signed-in session, since it's called by the dashboard on the editor's behalf.)
 Test the whole flow by adding a real test submission on `/dashboard/`, clicking
 **Accept & Publish**, and confirming: the paper appears on the live site with a correct
 cover sheet, the author's email arrives, and the submission's status flips to `published` in
-Supabase's Table Editor. Same cleanup pattern as the original notification-pipeline test —
-delete the test `_papers`/`pdfs` files afterward if you don't want it live.
+Supabase's Table Editor. Turn on [staging mode](#staging-mode) first so that author email
+comes only to you, not a real inbox. Same cleanup pattern as the original
+notification-pipeline test — delete the test `_papers`/`pdfs` files and Supabase
+submission row afterward if you don't want them left behind.
+
+## Staging mode
+
+Both real publish paths — the CLI (`publish-paper.js`) and the dashboard's
+**Accept & Publish** — end the same way: pushing a new file under `_papers/`, which
+automatically emails every mailing-list subscriber, and (dashboard path only) the
+submission's listed author(s). That's exactly the behavior you want once this is
+launched, and exactly what you don't want while testing with real subscriber data
+already in the database.
+
+Set a **`STAGING_EMAIL`** GitHub Actions repo variable (Settings → Secrets and
+variables → Actions → Variables tab → New repository variable) to your own address, and
+every real publish redirects *all* of its outgoing email to just that one address instead
+— the mailing-list blast and the author-acceptance email both honor it. Nothing else
+changes: the paper still actually gets committed, pushed, built, and deployed to the live
+site, and the submission still flips to `published` in Supabase. Only the email recipients
+are faked, so you can test the real thing without finding out the hard way that a real
+subscriber got a test email.
+
+Delete (or blank out) the `STAGING_EMAIL` variable before actually launching, or every
+real paper will only ever email you — both `notify-subscribers.yml` and
+`notify-author-accepted.js` treat an empty value the same as unset.
+
+This replaces manually disabling/re-enabling the "Notify Subscribers" workflow around each
+test, which works but is easy to forget to turn back on.
 
 ## Status
 
