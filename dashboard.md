@@ -10,7 +10,10 @@ permalink: /dashboard/
     <label for="signin-email">Email</label>
     <input type="email" id="signin-email" required autocomplete="username">
     <label for="signin-password">Password</label>
-    <input type="password" id="signin-password" required autocomplete="current-password">
+    <div class="dashboard-password-field">
+      <input type="password" id="signin-password" required autocomplete="current-password">
+      <button type="button" class="dashboard-password-toggle" data-target="signin-password" aria-label="Show password">Show</button>
+    </div>
     <button type="submit">Sign in</button>
     <p id="signin-status" class="dashboard-status" role="status"></p>
   </form>
@@ -29,7 +32,10 @@ permalink: /dashboard/
     <label for="invite-code">Invite code</label>
     <input type="text" id="invite-code" inputmode="numeric" pattern="[0-9]*" required autocomplete="one-time-code">
     <label for="invite-password">Choose a password</label>
-    <input type="password" id="invite-password" required autocomplete="new-password" minlength="6">
+    <div class="dashboard-password-field">
+      <input type="password" id="invite-password" required autocomplete="new-password" minlength="6">
+      <button type="button" class="dashboard-password-toggle" data-target="invite-password" aria-label="Show password">Show</button>
+    </div>
     <button type="submit">Set password &amp; sign in</button>
     <p id="accept-invite-status" class="dashboard-status" role="status"></p>
   </form>

@@ -355,6 +355,16 @@
     loadSubmissions();
   });
 
+  document.querySelectorAll(".dashboard-password-toggle").forEach(function (toggleButton) {
+    toggleButton.addEventListener("click", function () {
+      var input = document.getElementById(toggleButton.dataset.target);
+      var showing = input.type === "text";
+      input.type = showing ? "password" : "text";
+      toggleButton.textContent = showing ? "Show" : "Hide";
+      toggleButton.setAttribute("aria-label", showing ? "Show password" : "Hide password");
+    });
+  });
+
   populateRoster();
 
   supabase.auth.onAuthStateChange(function (_event, session) {
