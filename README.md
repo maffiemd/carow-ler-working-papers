@@ -172,17 +172,40 @@ submissions from intake through publication, and publish accepted papers with on
 `manuscripts` bucket from [`supabase/schema.sql`](supabase/schema.sql) (the block added after
 the mailing-list schema) in the Supabase SQL Editor, same as the original setup.
 
-**2. Invite the editors** — run once per editor, using the service_role key (Project Settings
+**2. Configure Auth email delivery** — Supabase's defaults don't work well for this:
+
+- **Site URL**: Authentication → URL Configuration → set **Site URL** to
+  `https://workingpapers.ilr.cornell.edu` (it defaults to `localhost:3000`, which breaks
+  every auth email's redirect) and add `https://workingpapers.ilr.cornell.edu/**` under
+  **Redirect URLs**.
+- **Custom SMTP**: Authentication → Emails → SMTP Settings → enable custom SMTP using the
+  same Resend account as the mailing list (Host `smtp.resend.com`, port `465`, username
+  `resend`, password a Resend API key, sender matching `FROM_EMAIL`). Supabase's built-in
+  mailer has a very low rate limit meant only for testing.
+- **Invite email template**: Authentication → Emails → Templates → "Invite user" —
+  **remove `{{ .ConfirmationURL }}` entirely** and replace it with `{{ .Token }}`
+  (a 6-digit code) instead. Institutional email security (Cornell's and UofT's included)
+  auto-scans links in incoming mail *before* anyone opens the email, which silently
+  consumes Supabase's single-use invite link — the recipient then clicks a dead link and
+  sees `otp_expired`, even on the very first real click. A typed code can't be
+  auto-consumed that way. The dashboard's sign-in page has a "Have an invite code
+  instead?" form that calls `verifyOtp()` with it (see `assets/js/dashboard.js`).
+
+**3. Invite the editors** — run once per editor, using the service_role key (Project Settings
 → API):
 ```bash
 SUPABASE_URL=https://gfiqcuznnmzpvnpynbxj.supabase.co \
 SUPABASE_SERVICE_ROLE_KEY=your_service_role_key \
 node scripts/invite-editors.js "Kourtney Koebel <email>" "Michael Maffie <email>"
 ```
-Each editor gets an email with a link to set their own password — neither you nor this
-script ever sees or sets one.
+Each editor gets an email with a code to set their own password — neither you nor this
+script ever sees or sets one. If an invite's link/code gets scanner-consumed before the
+editor opens it (check: `invited_at` and `last_sign_in_at` only seconds apart in
+Authentication → Users), use `scripts/reinvite-editors.js` instead — same usage, but it
+first deletes the stuck account so a fresh invite can be sent (plain `invite-editors.js`
+refuses to resend to an already-registered email).
 
-**3. GitHub Personal Access Token** — the Edge Function needs a token that can trigger
+**4. GitHub Personal Access Token** — the Edge Function needs a token that can trigger
 `repository_dispatch` on this repo (classic PAT with `repo` scope, or fine-grained with
 Contents: Read and write). Create one at
 [github.com/settings/tokens](https://github.com/settings/tokens), then set it as an Edge
@@ -191,7 +214,7 @@ Function secret (never paste it into chat):
 supabase secrets set GITHUB_PAT=your_token_here
 ```
 
-**4. Deploy the Edge Function**:
+**5. Deploy the Edge Function**:
 ```bash
 supabase functions deploy publish-submission
 ```
