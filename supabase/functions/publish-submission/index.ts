@@ -20,6 +20,21 @@ import { createClient, type SupabaseClient } from "npm:@supabase/supabase-js@2";
 
 const GITHUB_REPO = "maffiemd/carow-ler-working-papers";
 
+// Called directly from the browser (assets/js/dashboard.js), unlike
+// notify-owner (triggered server-side via pg_net), so unlike that function
+// this one needs to handle the CORS preflight and echo these headers on
+// every response - otherwise the browser silently blocks the response
+// before dashboard.js ever sees it, surfacing only as supabase-js's generic
+// "Failed to send a request to the Edge Function".
+const CORS_HEADERS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
+
+function response(body: BodyInit | null, init: ResponseInit = {}): Response {
+  return new Response(body, { ...init, headers: { ...CORS_HEADERS, ...init.headers } });
+}
+
 function slugify(title: string): string {
   return title
     .toLowerCase()
@@ -46,6 +61,10 @@ async function nextWpNumber(supabase: SupabaseClient): Promise<string> {
 }
 
 Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: CORS_HEADERS });
+  }
+
   const authHeader = req.headers.get("Authorization") ?? "";
 
   const supabase = createClient(
@@ -56,17 +75,17 @@ Deno.serve(async (req) => {
 
   const { data: userData, error: userError } = await supabase.auth.getUser();
   if (userError || !userData.user) {
-    return new Response("Unauthorized", { status: 401 });
+    return response("Unauthorized", { status: 401 });
   }
 
   let submissionId: string | undefined;
   try {
     ({ submission_id: submissionId } = await req.json());
   } catch {
-    return new Response("Invalid JSON body", { status: 400 });
+    return response("Invalid JSON body", { status: 400 });
   }
   if (!submissionId) {
-    return new Response("Missing submission_id", { status: 400 });
+    return response("Missing submission_id", { status: 400 });
   }
 
   const { data: submission, error: fetchError } = await supabase
@@ -75,10 +94,10 @@ Deno.serve(async (req) => {
     .eq("id", submissionId)
     .single();
   if (fetchError || !submission) {
-    return new Response("Submission not found", { status: 404 });
+    return response("Submission not found", { status: 404 });
   }
   if (!submission.manuscript_path) {
-    return new Response("Submission has no manuscript uploaded", { status: 400 });
+    return response("Submission has no manuscript uploaded", { status: 400 });
   }
 
   const wpNumber = submission.wp_number || (await nextWpNumber(supabase));
@@ -88,7 +107,7 @@ Deno.serve(async (req) => {
     .from("manuscripts")
     .createSignedUrl(submission.manuscript_path, 600);
   if (signedUrlError || !signedUrlData) {
-    return new Response(`Failed to sign manuscript URL: ${signedUrlError?.message}`, { status: 500 });
+    return response(`Failed to sign manuscript URL: ${signedUrlError?.message}`, { status: 500 });
   }
 
   const dispatchRes = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/dispatches`, {
@@ -114,7 +133,7 @@ Deno.serve(async (req) => {
 
   if (!dispatchRes.ok) {
     const text = await dispatchRes.text();
-    return new Response(`GitHub dispatch failed (${dispatchRes.status}): ${text}`, { status: 502 });
+    return response(`GitHub dispatch failed (${dispatchRes.status}): ${text}`, { status: 502 });
   }
 
   await supabase
@@ -122,7 +141,7 @@ Deno.serve(async (req) => {
     .update({ wp_number: wpNumber, status: "accepted", updated_at: new Date().toISOString() })
     .eq("id", submission.id);
 
-  return new Response(JSON.stringify({ ok: true, wp_number: wpNumber }), {
+  return response(JSON.stringify({ ok: true, wp_number: wpNumber }), {
     status: 200,
     headers: { "Content-Type": "application/json" },
   });
