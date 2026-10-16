@@ -92,6 +92,7 @@ exclude:
   - Gemfile
   - Gemfile.lock
   - README.md
+  - EDITOR-GUIDE.md
   - templates
   - vendor
   - node_modules

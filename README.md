@@ -5,6 +5,10 @@ on Work (CAROW)](https://www.ilr.cornell.edu/carow) at the Cornell University IL
 Circulates new research on industrial relations, employment relations, labor-management
 institutions, collective bargaining, and related workplace governance topics.
 
+This README covers one-time infrastructure setup. For the day-to-day editorial
+workflow — publishing a paper, the mailing list, announcing on social media — see
+[`EDITOR-GUIDE.md`](EDITOR-GUIDE.md).
+
 ## Local development
 
 ```
