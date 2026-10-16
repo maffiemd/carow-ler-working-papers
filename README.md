@@ -216,5 +216,11 @@ Scaffolded; not yet publicly launched. Outstanding before launch:
 - [x] Run the `submissions`/`manuscripts` schema addition, invite the two editors, set the
       `GITHUB_PAT` Edge Function secret, and deploy `publish-submission` — the editorial
       dashboard is live at `/dashboard/`
+- [ ] **Change `FROM_EMAIL` off the placeholder `grievances@michaelmaffie.com` sender**
+      before accepting/publishing a real paper — it's currently reused from an unrelated
+      project and shouldn't be author- or subscriber-facing for CAROW LER. Update the
+      `FROM_EMAIL` GitHub Actions variable (and the Supabase Auth custom SMTP sender, if
+      that's been set up) to a real `@ilr.cornell.edu` or series-specific address on a
+      domain verified in Resend.
 - [ ] Register with RePEc; consider SSRN mirroring
 - [ ] Link to this site from ilr.cornell.edu/carow
