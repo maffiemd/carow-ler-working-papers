@@ -39,6 +39,7 @@
 }
 
 .dashboard-form { display: flex; flex-direction: column; gap: 0.4rem; max-width: 420px; }
+.dashboard-form[hidden] { display: none; }
 .dashboard-form--card {
   max-width: none;
   background: var(--bg-alt);

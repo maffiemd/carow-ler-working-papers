@@ -8,6 +8,10 @@
   var signinForm = document.getElementById("signin-form");
   var signinStatus = document.getElementById("signin-status");
 
+  var showAcceptInviteLink = document.getElementById("show-accept-invite");
+  var acceptInviteForm = document.getElementById("accept-invite-form");
+  var acceptInviteStatus = document.getElementById("accept-invite-status");
+
   var showAddFormButton = document.getElementById("show-add-form");
   var cancelAddFormButton = document.getElementById("cancel-add-form");
   var addForm = document.getElementById("add-form");
@@ -250,6 +254,41 @@
 
   signOutButton.addEventListener("click", async function () {
     await supabase.auth.signOut();
+  });
+
+  showAcceptInviteLink.addEventListener("click", function (event) {
+    event.preventDefault();
+    acceptInviteForm.hidden = !acceptInviteForm.hidden;
+    showAcceptInviteLink.textContent = acceptInviteForm.hidden
+      ? "Have an invite code instead?"
+      : "Back to password sign-in";
+  });
+
+  acceptInviteForm.addEventListener("submit", async function (event) {
+    event.preventDefault();
+    var submitButton = acceptInviteForm.querySelector('button[type="submit"]');
+    submitButton.disabled = true;
+    acceptInviteStatus.textContent = "Verifying…";
+
+    var email = document.getElementById("invite-email").value.trim();
+    var code = document.getElementById("invite-code").value.trim();
+    var newPassword = document.getElementById("invite-password").value;
+
+    var { error: verifyError } = await supabase.auth.verifyOtp({ email: email, token: code, type: "invite" });
+    if (verifyError) {
+      acceptInviteStatus.textContent = "Couldn't verify that code: " + verifyError.message;
+      submitButton.disabled = false;
+      return;
+    }
+
+    var { error: passwordError } = await supabase.auth.updateUser({ password: newPassword });
+    submitButton.disabled = false;
+    if (passwordError) {
+      acceptInviteStatus.textContent = "Signed in, but couldn't set your password: " + passwordError.message;
+      return;
+    }
+    acceptInviteStatus.textContent = "";
+    // onAuthStateChange below picks up the new session and shows the dashboard.
   });
 
   showAddFormButton.addEventListener("click", function () {

@@ -14,6 +14,25 @@ permalink: /dashboard/
     <button type="submit">Sign in</button>
     <p id="signin-status" class="dashboard-status" role="status"></p>
   </form>
+
+  <p class="dashboard-hint"><a href="#" id="show-accept-invite">Have an invite code instead?</a></p>
+
+  <form id="accept-invite-form" class="dashboard-form" hidden>
+    <h2>Accept your invite</h2>
+    <p class="dashboard-hint">
+      Use the 6-digit code from your invite email, not the button/link in it — many
+      institutional email systems auto-scan links before you ever see them, which uses
+      up the link's one-time token. The code is unaffected by that.
+    </p>
+    <label for="invite-email">Email</label>
+    <input type="email" id="invite-email" required autocomplete="username">
+    <label for="invite-code">Invite code</label>
+    <input type="text" id="invite-code" inputmode="numeric" pattern="[0-9]*" required autocomplete="one-time-code">
+    <label for="invite-password">Choose a password</label>
+    <input type="password" id="invite-password" required autocomplete="new-password" minlength="6">
+    <button type="submit">Set password &amp; sign in</button>
+    <p id="accept-invite-status" class="dashboard-status" role="status"></p>
+  </form>
 </section>
 
 <section id="dashboard-main" class="dashboard-panel" hidden>
