@@ -52,6 +52,12 @@ editorial_board:
 
 contact_email: "kourtney.koebel@utoronto.ca or maffie@cornell.edu"
 
+# GoatCounter (https://www.goatcounter.com) site code for analytics - shared with other
+# personal sites, so stats here are combined with theirs rather than broken out on their
+# own. See footer.html for where this is used; not loaded on /dashboard/ (dashboard.html
+# is a separate layout that doesn't include footer.html).
+goatcounter_code: "maffie"
+
 # Supabase project settings used by assets/js/supabase-client.js.
 # The anon key is intentionally public: Row Level Security only lets it
 # insert new subscribers and call the narrow unsubscribe() RPC (see
