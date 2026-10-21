@@ -48,12 +48,21 @@ async function main() {
   const resend = new Resend(requireEnv("RESEND_API_KEY"));
   const wpLabel = `${seriesPrefix}-${wpNumber}`;
   const paperUrl = `${siteUrl}/papers/${slug}/`;
+  const pdfUrl = `${siteUrl}/pdfs/${slug}.pdf`;
   const subject = `Your paper is published: ${title}`;
-  const text = `Good news - "${title}" is now live as ${wpLabel}:
+  const text = `Good news: "${title}" is now live as ${wpLabel}.
 
-${paperUrl}
+Paper page: ${paperUrl}
+PDF (with the series cover sheet): ${pdfUrl}
 
-Thank you for submitting to the series.`;
+We've also announced it to the series mailing list, so subscribers will see it shortly. Please feel free to share the link with colleagues or post it on your own site. If you spot a problem with the paper page or the PDF, just reply to this email.
+
+Thank you for submitting to the series.
+
+Best,
+Kourtney Koebel and Michael Maffie
+Editors, CAROW LER Working Papers
+${siteUrl}`;
 
   const emails = authors.map((author) => ({
     from: fromEmail,
