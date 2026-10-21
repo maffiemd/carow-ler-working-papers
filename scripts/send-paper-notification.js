@@ -14,7 +14,7 @@
 //   SITE_URL                    e.g. "https://workingpapers.ilr.cornell.edu"
 // Optional:
 //   TEST_EMAIL                  if set, sends only to this address instead of querying Supabase
-//   REPLY_TO                    address replies should go to (the sending domain can't receive mail)
+//   REPLY_TO                    address(es) replies should go to, comma-separated for several (the sending domain can't receive mail)
 //   SERIES_PREFIX                e.g. "CAROW-LER-WP" (used in the subject line); falls back to wp_number alone
 
 const fs = require("fs");
@@ -144,7 +144,7 @@ async function sendPaper(paperFilePath, recipients, { resend, siteUrl, seriesPre
     return {
       from: fromEmail,
       to: recipient.email,
-      ...(replyTo && { reply_to: replyTo }),
+      ...(replyTo.length > 0 && { reply_to: replyTo }),
       subject,
       html: renderEmailHtml({ wpLabel, title, authorLine, abstract, paperLink, pdfLink, unsubscribeLink }),
       text: renderEmailText({ wpLabel, title, authorLine, abstract, paperLink, pdfLink, unsubscribeLink }),
@@ -180,7 +180,7 @@ async function main() {
   const resend = new Resend(requireEnv("RESEND_API_KEY"));
   const siteUrl = requireEnv("SITE_URL").replace(/\/$/, "");
   const fromEmail = requireEnv("FROM_EMAIL");
-  const replyTo = process.env.REPLY_TO;
+  const replyTo = (process.env.REPLY_TO || "").split(",").map((s) => s.trim()).filter(Boolean);
   const seriesPrefix = process.env.SERIES_PREFIX;
 
   const recipients = await getRecipients(supabase);

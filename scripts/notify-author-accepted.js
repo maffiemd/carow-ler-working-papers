@@ -14,7 +14,7 @@
 //   RESEND_API_KEY
 //   FROM_EMAIL
 // Optional:
-//   REPLY_TO
+//   REPLY_TO          comma-separated for several addresses
 //   STAGING_EMAIL     if set, every author email is redirected here instead
 //                      (subject tagged with the real intended recipient) -
 //                      see "Staging mode" in the README
@@ -42,7 +42,7 @@ async function main() {
   const slug = requireEnv("SLUG");
   const siteUrl = requireEnv("SITE_URL").replace(/\/$/, "");
   const fromEmail = requireEnv("FROM_EMAIL");
-  const replyTo = process.env.REPLY_TO;
+  const replyTo = (process.env.REPLY_TO || "").split(",").map((s) => s.trim()).filter(Boolean);
   const stagingEmail = process.env.STAGING_EMAIL;
 
   const resend = new Resend(requireEnv("RESEND_API_KEY"));
@@ -67,7 +67,7 @@ ${siteUrl}`;
   const emails = authors.map((author) => ({
     from: fromEmail,
     to: stagingEmail || author.email,
-    ...(replyTo && { reply_to: replyTo }),
+    ...(replyTo.length > 0 && { reply_to: replyTo }),
     subject: stagingEmail ? `[STAGING, would go to ${author.email}] ${subject}` : subject,
     text: `Dear ${author.name},\n\n${text}`,
   }));

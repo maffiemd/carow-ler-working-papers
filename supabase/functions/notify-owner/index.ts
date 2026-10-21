@@ -21,7 +21,7 @@ async function sendEmail(
   to: string,
   subject: string,
   body: { text?: string; html?: string },
-  replyTo?: string,
+  replyTo?: string[],
 ) {
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
@@ -33,7 +33,7 @@ async function sendEmail(
       from: Deno.env.get("NOTIFY_FROM_EMAIL"),
       to,
       subject,
-      ...(replyTo ? { reply_to: replyTo } : {}),
+      ...(replyTo && replyTo.length > 0 ? { reply_to: replyTo } : {}),
       ...body,
     }),
   });
@@ -63,7 +63,7 @@ Deno.serve(async (req) => {
 
   const unsubscribeLink = `${siteUrl()}/unsubscribe/?token=${record.unsubscribe_token}`;
 
-  const replyTo = Deno.env.get("REPLY_TO");
+  const replyTo = (Deno.env.get("REPLY_TO") ?? "").split(",").map((s) => s.trim()).filter(Boolean);
 
   const results = await Promise.all([
     sendEmail(ownerEmail, ownerSubject, { text: ownerText }),
