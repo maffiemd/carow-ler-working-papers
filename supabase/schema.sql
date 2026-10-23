@@ -61,6 +61,7 @@ create table if not exists submissions (
   manuscript_path text,
   hidden boolean not null default false,
   author_message text,
+  rejection_letter text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -68,6 +69,7 @@ create table if not exists submissions (
 -- For databases created before the dashboard's hide feature existed.
 alter table submissions add column if not exists hidden boolean not null default false;
 alter table submissions add column if not exists author_message text;
+alter table submissions add column if not exists rejection_letter text;
 
 alter table submissions enable row level security;
 

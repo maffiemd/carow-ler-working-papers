@@ -169,6 +169,18 @@
     window.open(data.signedUrl, "_blank");
   }
 
+  // supabase-js reports any non-2xx Edge Function response as a generic
+  // "non-2xx status code" message; the real reason is in the response body.
+  async function functionErrorMessage(fnError) {
+    if (fnError && fnError.context && typeof fnError.context.text === "function") {
+      try {
+        var text = await fnError.context.text();
+        if (text) return text;
+      } catch (e) { /* fall through to the generic message */ }
+    }
+    return fnError.message;
+  }
+
   var publishModal = document.getElementById("publish-modal");
   var publishForm = document.getElementById("publish-form");
   var publishWpInput = document.getElementById("publish-wp");
@@ -233,7 +245,7 @@
     });
     submitButton.disabled = false;
     if (fnError) {
-      publishStatus.textContent = "Publish failed: " + fnError.message;
+      publishStatus.textContent = "Publish failed: " + (await functionErrorMessage(fnError));
       return;
     }
 
@@ -245,6 +257,115 @@
   document.getElementById("publish-cancel").addEventListener("click", closePublishModal);
   document.addEventListener("keydown", function (event) {
     if (event.key === "Escape" && !publishModal.hidden) closePublishModal();
+  });
+
+  var REJECT_PLACEHOLDER = "[Add specific feedback for the author(s) here, or delete this line.]";
+  var rejectModal = document.getElementById("reject-modal");
+  var rejectForm = document.getElementById("reject-form");
+  var rejectSubject = document.getElementById("reject-subject");
+  var rejectBody = document.getElementById("reject-body");
+  var rejectStatus = document.getElementById("reject-status");
+  var rejectingSubmission = null;
+
+  function joinNames(names) {
+    if (names.length <= 1) return names.join("");
+    if (names.length === 2) return names[0] + " and " + names[1];
+    return names.slice(0, -1).join(", ") + ", and " + names[names.length - 1];
+  }
+
+  function draftRejectionLetter(submission) {
+    var names = (submission.authors || []).map(function (a) { return a.name; }).filter(Boolean);
+    return (
+      (names.length ? "Dear " + joinNames(names) + "," : "Dear author,") + "\n\n" +
+      'Thank you for submitting "' + submission.title + '" to CAROW LER Working Papers. ' +
+      "After careful consideration, we have decided not to include it in the series at this time.\n\n" +
+      REJECT_PLACEHOLDER + "\n\n" +
+      "We appreciate your interest in the series and wish you the best with the paper.\n\n" +
+      "Best,\nKourtney Koebel and Michael Maffie\nEditors, CAROW LER Working Papers"
+    );
+  }
+
+  function authorEmails(submission) {
+    return (submission.authors || []).map(function (a) { return a.email; }).filter(Boolean);
+  }
+
+  function openRejectModal(submission) {
+    rejectingSubmission = submission;
+    document.getElementById("reject-title").textContent = submission.title;
+    rejectSubject.value = "Your submission to CAROW LER Working Papers: " + submission.title;
+    rejectBody.value = draftRejectionLetter(submission);
+    var emails = authorEmails(submission);
+    document.getElementById("reject-recipients").textContent = emails.length
+      ? "Will email: " + emails.join(", ")
+      : "No author email is on file, so sending will only mark this submission as rejected; nothing will be emailed.";
+    document.getElementById("reject-send").textContent = emails.length ? "Send rejection letter" : "Mark as rejected";
+    rejectStatus.textContent = "";
+    rejectModal.hidden = false;
+    rejectSubject.focus();
+  }
+
+  function closeRejectModal() {
+    rejectModal.hidden = true;
+    rejectingSubmission = null;
+  }
+
+  async function sendRejection(preview) {
+    var submission = rejectingSubmission;
+    if (!submission) return;
+    var subject = rejectSubject.value.trim();
+    var body = rejectBody.value.trim();
+    if (!subject || !body) {
+      rejectStatus.textContent = "The subject and letter can't be empty.";
+      return;
+    }
+    if (body.indexOf(REJECT_PLACEHOLDER) !== -1) {
+      rejectStatus.textContent = "Replace or delete the bracketed placeholder line first.";
+      return;
+    }
+    if (!preview) {
+      var emails = authorEmails(submission);
+      var question = emails.length
+        ? "Send this rejection letter to " + emails.join(", ") + "? This can't be undone."
+        : 'Mark "' + submission.title + '" as rejected? No email will be sent, since no author email is on file.';
+      if (!confirm(question)) return;
+    }
+
+    var buttons = rejectForm.querySelectorAll("button");
+    buttons.forEach(function (b) { b.disabled = true; });
+    rejectStatus.textContent = preview ? "Sending preview…" : "Sending…";
+
+    var { data, error } = await supabase.functions.invoke("reject-submission", {
+      body: { submission_id: submission.id, subject: subject, body: body, preview: preview },
+    });
+    buttons.forEach(function (b) { b.disabled = false; });
+    if (error) {
+      rejectStatus.textContent = "Failed: " + (await functionErrorMessage(error));
+      return;
+    }
+
+    if (preview) {
+      rejectStatus.textContent = "Preview sent to " + (data && data.to ? data.to.join(", ") : "you") + ".";
+      return;
+    }
+    closeRejectModal();
+    if (data && data.staging) {
+      alert("STAGING: the letter was sent to " + data.to.join(", ") + " instead of the authors. The submission is marked rejected.");
+    } else if (data && data.emailed) {
+      alert("Rejection letter sent to " + data.emailed + " address" + (data.emailed === 1 ? "" : "es") + ".");
+    } else {
+      alert("Marked as rejected. No email was sent, since no author email is on file.");
+    }
+    loadSubmissions();
+  }
+
+  rejectForm.addEventListener("submit", function (event) {
+    event.preventDefault();
+    sendRejection(false);
+  });
+  document.getElementById("reject-preview").addEventListener("click", function () { sendRejection(true); });
+  document.getElementById("reject-cancel").addEventListener("click", closeRejectModal);
+  document.addEventListener("keydown", function (event) {
+    if (event.key === "Escape" && !rejectModal.hidden) closeRejectModal();
   });
 
   function renderRow(submission) {
@@ -339,6 +460,21 @@
       publishButton.textContent = "Accept & Publish";
       publishButton.addEventListener("click", function () { openPublishModal(submission); });
       actionsTd.appendChild(publishButton);
+
+      if (submission.rejection_letter) {
+        var sentLabel = document.createElement("div");
+        sentLabel.className = "dashboard-hint";
+        sentLabel.textContent = "Rejection letter sent";
+        actionsTd.appendChild(sentLabel);
+      } else {
+        var rejectButton = document.createElement("button");
+        rejectButton.type = "button";
+        rejectButton.className = "dashboard-button--secondary dashboard-button--small dashboard-button--danger";
+        rejectButton.style.marginTop = "0.4rem";
+        rejectButton.textContent = "Reject & notify";
+        rejectButton.addEventListener("click", function () { openRejectModal(submission); });
+        actionsTd.appendChild(rejectButton);
+      }
     }
 
     var rowActions = document.createElement("div");

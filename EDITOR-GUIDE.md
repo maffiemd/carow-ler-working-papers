@@ -171,6 +171,16 @@ auto-scan links before you ever see them, which silently burns a one-time link's
 On the sign-in page, click **"Have an invite code instead?"** and enter your email, the
 code, and a password of your choosing.
 
+**Rejecting a submission**: click **Reject & notify** on the row. A dialog opens with a
+pre-drafted letter (greeting with the authors' names, a standard decline, and your
+sign-off) that you edit freely; replace the bracketed placeholder line with your specific
+feedback, or delete it. The dialog lists exactly who will be emailed. Use **Send preview
+to me** to see it in your own inbox first, then **Send rejection letter** (it asks you to
+confirm, and can't be undone). The submission is marked rejected and a copy of the letter
+is kept. If no author email is on file, the button becomes **Mark as rejected** and
+nothing is emailed. Changing the Status dropdown to "rejected" by itself does *not* send
+a letter.
+
 **Editing a submission**: click **Edit** on any row to change its title, authors,
 abstract, or date received, or to replace the manuscript PDF (leave the file field empty
 to keep the current one). Status, assignee, and decision notes are edited right in the

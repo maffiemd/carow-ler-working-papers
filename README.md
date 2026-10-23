@@ -223,12 +223,16 @@ at [github.com/settings/tokens](https://github.com/settings/tokens):
   variables → Actions → New repository secret** on GitHub (or `gh secret set
   WORKFLOW_GITHUB_PAT` in your own terminal — not here).
 
-**5. Deploy the Edge Function**:
+**5. Deploy the Edge Functions**:
 ```bash
 supabase functions deploy publish-submission
+supabase functions deploy reject-submission
 ```
-(No `--no-verify-jwt` here, unlike `notify-owner` — this one *should* require a valid
-signed-in session, since it's called by the dashboard on the editor's behalf.)
+(No `--no-verify-jwt` on either, unlike `notify-owner` — these *should* require a valid
+signed-in session, since the dashboard calls them on the editor's behalf.
+`reject-submission` sends the "Reject & notify" letter, using the same `RESEND_API_KEY`,
+`NOTIFY_FROM_EMAIL`, `REPLY_TO`, and `SITE_URL` Supabase secrets as `notify-owner`, so make
+sure `NOTIFY_FROM_EMAIL` is the series address, not a leftover placeholder.)
 
 Test the whole flow by adding a real test submission on `/dashboard/`, clicking
 **Accept & Publish**, and confirming: the paper appears on the live site with a correct
@@ -256,9 +260,16 @@ site, and the submission still flips to `published` in Supabase. Only the email 
 are faked, so you can test the real thing without finding out the hard way that a real
 subscriber got a test email.
 
+The dashboard's **Reject & notify** letter is sent by a Supabase Edge Function, not
+GitHub Actions, so it needs its *own* copy of the setting: a Supabase secret named
+`STAGING_EMAIL` (`supabase secrets set STAGING_EMAIL=you@example.com`). Set both while testing.
+Its **Send preview to me** button is the other safety net: it emails the letter to the
+signed-in editor only and changes nothing on the submission.
+
 Delete (or blank out) the `STAGING_EMAIL` variable before actually launching, or every
-real paper will only ever email you — both `notify-subscribers.yml` and
-`notify-author-accepted.js` treat an empty value the same as unset.
+real paper will only ever email you — `notify-subscribers.yml`,
+`notify-author-accepted.js`, and `reject-submission` all treat an empty value the same as
+unset. Remember to remove the Supabase secret too (`supabase secrets unset STAGING_EMAIL`).
 
 This replaces manually disabling/re-enabling the "Notify Subscribers" workflow around each
 test, which works but is easy to forget to turn back on.

@@ -123,3 +123,26 @@ permalink: /dashboard/
     <p id="publish-status" class="dashboard-status" role="status"></p>
   </form>
 </div>
+
+<div id="reject-modal" class="dashboard-modal" hidden>
+  <form id="reject-form" class="dashboard-form">
+    <h2>Reject &amp; notify</h2>
+    <p id="reject-title" class="dashboard-hint"></p>
+
+    <label for="reject-subject">Subject</label>
+    <input type="text" id="reject-subject" required>
+
+    <label for="reject-body">Letter</label>
+    <textarea id="reject-body" rows="14" required></textarea>
+    <p class="dashboard-hint">Edit freely. A blank line starts a new paragraph. Replace or delete the bracketed placeholder line before sending.</p>
+    <p id="reject-recipients" class="dashboard-hint"></p>
+    <p class="dashboard-hint">Sending can't be undone. Use <strong>Send preview to me</strong> first to see exactly how it will look.</p>
+
+    <div class="dashboard-form__actions">
+      <button type="submit" id="reject-send">Send rejection letter</button>
+      <button type="button" id="reject-preview" class="dashboard-button--secondary">Send preview to me</button>
+      <button type="button" id="reject-cancel" class="dashboard-button--secondary">Cancel</button>
+    </div>
+    <p id="reject-status" class="dashboard-status" role="status"></p>
+  </form>
+</div>
