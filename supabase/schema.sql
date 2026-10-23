@@ -59,9 +59,13 @@ create table if not exists submissions (
   decision_notes text,
   wp_number text,
   manuscript_path text,
+  hidden boolean not null default false,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+-- For databases created before the dashboard's hide feature existed.
+alter table submissions add column if not exists hidden boolean not null default false;
 
 alter table submissions enable row level security;
 

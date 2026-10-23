@@ -18,6 +18,17 @@
   var addStatus = document.getElementById("add-status");
   var assignedSelect = document.getElementById("add-assigned");
   var receivedInput = document.getElementById("add-received");
+  var editIdInput = document.getElementById("edit-id");
+  var addFormTitle = document.getElementById("add-form-title");
+  var addSubmitButton = document.getElementById("add-submit");
+  var manuscriptInput = document.getElementById("add-manuscript");
+  var manuscriptHint = document.getElementById("add-manuscript-hint");
+  var publishedHint = document.getElementById("add-published-hint");
+  var showHiddenCheckbox = document.getElementById("show-hidden");
+
+  // The submission currently being edited in the shared add/edit form (null
+  // when the form is in "add" mode).
+  var editingSubmission = null;
 
   var tbody = document.getElementById("submissions-tbody");
   var emptyNote = document.getElementById("submissions-empty");
@@ -63,6 +74,84 @@
     return (authors || [])
       .map(function (a) { return a.affiliation ? a.name + " (" + a.affiliation + ")" : a.name; })
       .join(", ");
+  }
+
+  // Inverse of parseAuthors: one "Name (Affiliation) <email>" per line.
+  function formatAuthorsForEdit(authors) {
+    return (authors || [])
+      .map(function (a) {
+        var line = a.name || "";
+        if (a.affiliation) line += " (" + a.affiliation + ")";
+        if (a.email) line += " <" + a.email + ">";
+        return line;
+      })
+      .join("\n");
+  }
+
+  function resetAddForm() {
+    editingSubmission = null;
+    addForm.reset();
+    editIdInput.value = "";
+    addFormTitle.textContent = "New submission";
+    addSubmitButton.textContent = "Save submission";
+    manuscriptInput.required = true;
+    manuscriptHint.hidden = true;
+    publishedHint.hidden = true;
+    addStatus.textContent = "";
+  }
+
+  function openEditForm(submission) {
+    resetAddForm();
+    editingSubmission = submission;
+    editIdInput.value = submission.id;
+    addFormTitle.textContent = "Edit submission";
+    addSubmitButton.textContent = "Save changes";
+    document.getElementById("add-title").value = submission.title || "";
+    document.getElementById("add-authors").value = formatAuthorsForEdit(submission.authors);
+    document.getElementById("add-abstract").value = submission.abstract || "";
+    assignedSelect.value = submission.assigned_to || "";
+    receivedInput.value = submission.received_date || "";
+    manuscriptInput.required = false;
+    manuscriptHint.hidden = false;
+    publishedHint.hidden = submission.status !== "published";
+    addForm.hidden = false;
+    showAddFormButton.hidden = true;
+    addForm.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  async function setHidden(submission, hidden) {
+    var { error } = await supabase
+      .from("submissions")
+      .update({ hidden: hidden, updated_at: new Date().toISOString() })
+      .eq("id", submission.id);
+    if (error) {
+      alert("Couldn't update: " + error.message);
+      return;
+    }
+    loadSubmissions();
+  }
+
+  async function deletePermanently(submission) {
+    var warning =
+      'Permanently delete "' + submission.title + '"? This removes the submission record and its manuscript file, and cannot be undone.';
+    if (submission.status === "published") {
+      warning += "\n\nThis paper is already published. Deleting it here does NOT take it off the live site.";
+    }
+    if (!confirm(warning)) return;
+
+    if (submission.manuscript_path) {
+      var { error: storageError } = await supabase.storage.from("manuscripts").remove([submission.manuscript_path]);
+      if (storageError) {
+        alert("Couldn't delete the manuscript file, so nothing was deleted: " + storageError.message);
+        return;
+      }
+    }
+    var { error } = await supabase.from("submissions").delete().eq("id", submission.id);
+    if (error) {
+      alert("Deleted the manuscript file, but couldn't delete the record: " + error.message);
+      return;
+    }
+    loadSubmissions();
   }
 
   function statusSelectHtml(current) {
@@ -117,9 +206,17 @@
 
   function renderRow(submission) {
     var tr = document.createElement("tr");
+    if (submission.hidden) tr.className = "dashboard-row--hidden";
 
     var titleTd = document.createElement("td");
     titleTd.textContent = submission.title;
+    if (submission.hidden) {
+      var hiddenBadge = document.createElement("span");
+      hiddenBadge.className = "dashboard-badge";
+      hiddenBadge.textContent = "Hidden";
+      titleTd.appendChild(document.createElement("br"));
+      titleTd.appendChild(hiddenBadge);
+    }
     tr.appendChild(titleTd);
 
     var authorsTd = document.createElement("td");
@@ -190,7 +287,9 @@
 
     var actionsTd = document.createElement("td");
     if (submission.status === "published") {
-      actionsTd.textContent = "Published (" + (submission.wp_number || "") + ")";
+      var publishedLabel = document.createElement("div");
+      publishedLabel.textContent = "Published (" + (submission.wp_number || "") + ")";
+      actionsTd.appendChild(publishedLabel);
     } else {
       var publishButton = document.createElement("button");
       publishButton.type = "button";
@@ -198,16 +297,34 @@
       publishButton.addEventListener("click", function () { acceptAndPublish(submission); });
       actionsTd.appendChild(publishButton);
     }
+
+    var rowActions = document.createElement("div");
+    rowActions.className = "dashboard-row-actions";
+    function addRowAction(label, handler, extraClass) {
+      var button = document.createElement("button");
+      button.type = "button";
+      button.className = "dashboard-button--secondary dashboard-button--small" + (extraClass ? " " + extraClass : "");
+      button.textContent = label;
+      button.addEventListener("click", handler);
+      rowActions.appendChild(button);
+    }
+    addRowAction("Edit", function () { openEditForm(submission); });
+    addRowAction(submission.hidden ? "Unhide" : "Hide", function () { setHidden(submission, !submission.hidden); });
+    if (submission.hidden) {
+      addRowAction("Delete permanently", function () { deletePermanently(submission); }, "dashboard-button--danger");
+    }
+    actionsTd.appendChild(rowActions);
     tr.appendChild(actionsTd);
 
     return tr;
   }
 
   async function loadSubmissions() {
-    var { data, error } = await supabase
-      .from("submissions")
-      .select("*")
-      .order("received_date", { ascending: false });
+    var query = supabase.from("submissions").select("*");
+    if (!showHiddenCheckbox.checked) {
+      query = query.eq("hidden", false);
+    }
+    var { data, error } = await query.order("received_date", { ascending: false });
 
     if (error) {
       console.error("Failed to load submissions:", error);
@@ -292,19 +409,19 @@
   });
 
   showAddFormButton.addEventListener("click", function () {
+    resetAddForm();
     addForm.hidden = false;
     showAddFormButton.hidden = true;
-    if (!receivedInput.value) {
-      receivedInput.value = new Date().toISOString().slice(0, 10);
-    }
+    receivedInput.value = new Date().toISOString().slice(0, 10);
   });
 
   cancelAddFormButton.addEventListener("click", function () {
+    resetAddForm();
     addForm.hidden = true;
     showAddFormButton.hidden = false;
-    addForm.reset();
-    addStatus.textContent = "";
   });
+
+  showHiddenCheckbox.addEventListener("change", loadSubmissions);
 
   addForm.addEventListener("submit", async function (event) {
     event.preventDefault();
@@ -317,39 +434,62 @@
     var abstract = document.getElementById("add-abstract").value.trim();
     var assignedTo = assignedSelect.value;
     var receivedDate = receivedInput.value;
-    var file = document.getElementById("add-manuscript").files[0];
+    var file = manuscriptInput.files[0];
+    var editing = editingSubmission;
 
-    if (!file) {
+    if (!file && !editing) {
       addStatus.textContent = "Please attach a manuscript PDF.";
       submitButton.disabled = false;
       return;
     }
 
-    var path = Date.now() + "-" + file.name.replace(/[^a-zA-Z0-9.\-]/g, "_");
-    var { error: uploadError } = await supabase.storage.from("manuscripts").upload(path, file);
-    if (uploadError) {
-      addStatus.textContent = "Upload failed: " + uploadError.message;
-      submitButton.disabled = false;
-      return;
+    var path = editing ? editing.manuscript_path : null;
+    var uploadedNewFile = false;
+    if (file) {
+      var newPath = Date.now() + "-" + file.name.replace(/[^a-zA-Z0-9.\-]/g, "_");
+      var { error: uploadError } = await supabase.storage.from("manuscripts").upload(newPath, file);
+      if (uploadError) {
+        addStatus.textContent = "Upload failed: " + uploadError.message;
+        submitButton.disabled = false;
+        return;
+      }
+      path = newPath;
+      uploadedNewFile = true;
     }
 
-    var { error: insertError } = await supabase.from("submissions").insert({
+    var fields = {
       title: title,
       authors: authors,
       abstract: abstract,
       assigned_to: assignedTo,
       received_date: receivedDate,
       manuscript_path: path,
-    });
+    };
+
+    var saveError;
+    if (editing) {
+      fields.updated_at = new Date().toISOString();
+      saveError = (await supabase.from("submissions").update(fields).eq("id", editing.id)).error;
+    } else {
+      saveError = (await supabase.from("submissions").insert(fields)).error;
+    }
 
     submitButton.disabled = false;
-    if (insertError) {
-      addStatus.textContent = "Couldn't save: " + insertError.message;
+    if (saveError) {
+      if (uploadedNewFile) {
+        await supabase.storage.from("manuscripts").remove([path]);
+      }
+      addStatus.textContent = "Couldn't save: " + saveError.message;
       return;
     }
 
-    addStatus.textContent = "";
-    addForm.reset();
+    // The old manuscript is only removed once the new record is safely saved,
+    // so a failed save never leaves the submission pointing at a deleted file.
+    if (editing && uploadedNewFile && editing.manuscript_path) {
+      await supabase.storage.from("manuscripts").remove([editing.manuscript_path]);
+    }
+
+    resetAddForm();
     addForm.hidden = true;
     showAddFormButton.hidden = false;
     loadSubmissions();

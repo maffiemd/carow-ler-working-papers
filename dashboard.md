@@ -44,11 +44,15 @@ permalink: /dashboard/
 <section id="dashboard-main" class="dashboard-panel" hidden>
   <div class="dashboard-panel__header">
     <h1>Submissions</h1>
-    <button type="button" id="show-add-form">Add submission</button>
+    <div class="dashboard-panel__actions">
+      <label class="dashboard-checkbox"><input type="checkbox" id="show-hidden"> Show hidden</label>
+      <button type="button" id="show-add-form">Add submission</button>
+    </div>
   </div>
 
   <form id="add-form" class="dashboard-form dashboard-form--card" hidden>
-    <h2>New submission</h2>
+    <h2 id="add-form-title">New submission</h2>
+    <input type="hidden" id="edit-id">
     <label for="add-title">Title</label>
     <input type="text" id="add-title" required>
 
@@ -67,9 +71,11 @@ permalink: /dashboard/
 
     <label for="add-manuscript">Manuscript (PDF)</label>
     <input type="file" id="add-manuscript" accept="application/pdf" required>
+    <p id="add-manuscript-hint" class="dashboard-hint" hidden>Leave empty to keep the current file. Choosing a new one replaces it.</p>
+    <p id="add-published-hint" class="dashboard-hint" hidden>This paper is already published. Edits here change the dashboard record only, not the live paper page or PDF.</p>
 
     <div class="dashboard-form__actions">
-      <button type="submit">Save submission</button>
+      <button type="submit" id="add-submit">Save submission</button>
       <button type="button" id="cancel-add-form" class="dashboard-button--secondary">Cancel</button>
     </div>
     <p id="add-status" class="dashboard-status" role="status"></p>

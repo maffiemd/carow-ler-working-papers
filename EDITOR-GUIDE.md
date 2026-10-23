@@ -167,6 +167,20 @@ auto-scan links before you ever see them, which silently burns a one-time link's
 On the sign-in page, click **"Have an invite code instead?"** and enter your email, the
 code, and a password of your choosing.
 
+**Editing a submission**: click **Edit** on any row to change its title, authors,
+abstract, or date received, or to replace the manuscript PDF (leave the file field empty
+to keep the current one). Status, assignee, and decision notes are edited right in the
+table. For a paper that's already published, Edit only changes the dashboard record, not
+the live paper page or PDF.
+
+**Hiding and removing submissions**: **Hide** takes a row off the main list (it's
+reversible, and nothing is deleted); tick **Show hidden** at the top to see hidden rows
+and **Unhide** them. Use this for decluttering or when an author withdraws a paper.
+If an author wants their paper actually gone, hide it first, then use **Delete
+permanently** on the hidden row, which removes the record and its manuscript file for
+good. Deleting a published paper here does not take it off the live site; that means
+removing its `_papers/` and `pdfs/` files from the repo.
+
 The CLI workflow still works too, for anything logged outside the dashboard.
 
 ## Quick troubleshooting
