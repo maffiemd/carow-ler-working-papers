@@ -169,40 +169,83 @@
     window.open(data.signedUrl, "_blank");
   }
 
-  async function acceptAndPublish(submission) {
+  var publishModal = document.getElementById("publish-modal");
+  var publishForm = document.getElementById("publish-form");
+  var publishWpInput = document.getElementById("publish-wp");
+  var publishMessageInput = document.getElementById("publish-message");
+  var publishStatus = document.getElementById("publish-status");
+  var publishingSubmission = null;
+
+  function openPublishModal(submission) {
     if (!submission.manuscript_path) {
       alert("This submission has no manuscript file uploaded — cannot publish.");
       return;
     }
-    var wpNumber = prompt(
-      "WP number for this paper (e.g. 2026-03):",
-      submission.wp_number || ""
-    );
-    if (!wpNumber) return;
+    publishingSubmission = submission;
+    document.getElementById("publish-title").textContent = submission.title;
+    publishWpInput.value = submission.wp_number || "";
+    publishMessageInput.value = submission.author_message || "";
+    var emails = (submission.authors || [])
+      .map(function (a) { return a.email; })
+      .filter(Boolean);
+    document.getElementById("publish-recipients").textContent = emails.length
+      ? "Will email: " + emails.join(", ")
+      : "No author email is on file, so no email will be sent to the author(s).";
+    publishStatus.textContent = "";
+    publishModal.hidden = false;
+    publishWpInput.focus();
+  }
 
-    if (!confirm('Publish "' + submission.title + '" as ' + wpNumber + " and notify the author(s)? This goes live on the site.")) {
-      return;
-    }
+  function closePublishModal() {
+    publishModal.hidden = true;
+    publishingSubmission = null;
+  }
+
+  publishForm.addEventListener("submit", async function (event) {
+    event.preventDefault();
+    var submission = publishingSubmission;
+    if (!submission) return;
+
+    var submitButton = publishForm.querySelector('button[type="submit"]');
+    submitButton.disabled = true;
+    publishStatus.textContent = "Publishing…";
+
+    var wpNumber = publishWpInput.value.trim();
+    var message = publishMessageInput.value.trim();
 
     var { error: updateError } = await supabase
       .from("submissions")
-      .update({ status: "accepted", wp_number: wpNumber, updated_at: new Date().toISOString() })
+      .update({
+        status: "accepted",
+        wp_number: wpNumber,
+        author_message: message || null,
+        updated_at: new Date().toISOString(),
+      })
       .eq("id", submission.id);
     if (updateError) {
-      alert("Couldn't save the WP number: " + updateError.message);
+      publishStatus.textContent = "Couldn't save: " + updateError.message;
+      submitButton.disabled = false;
       return;
     }
 
-    var { data: fnData, error: fnError } = await supabase.functions.invoke("publish-submission", {
+    var { error: fnError } = await supabase.functions.invoke("publish-submission", {
       body: { submission_id: submission.id },
     });
+    submitButton.disabled = false;
     if (fnError) {
-      alert("Publish failed: " + fnError.message);
+      publishStatus.textContent = "Publish failed: " + fnError.message;
       return;
     }
+
+    closePublishModal();
     alert("Publishing started. The site and the author's inbox will update in a minute or two.");
     loadSubmissions();
-  }
+  });
+
+  document.getElementById("publish-cancel").addEventListener("click", closePublishModal);
+  document.addEventListener("keydown", function (event) {
+    if (event.key === "Escape" && !publishModal.hidden) closePublishModal();
+  });
 
   function renderRow(submission) {
     var tr = document.createElement("tr");
@@ -294,7 +337,7 @@
       var publishButton = document.createElement("button");
       publishButton.type = "button";
       publishButton.textContent = "Accept & Publish";
-      publishButton.addEventListener("click", function () { acceptAndPublish(submission); });
+      publishButton.addEventListener("click", function () { openPublishModal(submission); });
       actionsTd.appendChild(publishButton);
     }
 

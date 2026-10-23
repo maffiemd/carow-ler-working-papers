@@ -101,3 +101,25 @@ permalink: /dashboard/
     <p id="submissions-empty" class="dashboard-hint" hidden>No submissions yet.</p>
   </div>
 </section>
+
+<div id="publish-modal" class="dashboard-modal" hidden>
+  <form id="publish-form" class="dashboard-form">
+    <h2>Accept &amp; publish</h2>
+    <p id="publish-title" class="dashboard-hint"></p>
+
+    <label for="publish-wp">WP number</label>
+    <input type="text" id="publish-wp" required placeholder="e.g. 2026-03">
+
+    <label for="publish-message">Message to the author(s) (optional)</label>
+    <textarea id="publish-message" rows="7" placeholder="Feedback or a personal note, e.g. what the reviewers liked or a request for a final check."></textarea>
+    <p class="dashboard-hint">Shown in the acceptance email, under the congratulations. Leave blank to send the standard email. A blank line starts a new paragraph.</p>
+    <p id="publish-recipients" class="dashboard-hint"></p>
+    <p class="dashboard-hint">This puts the paper live on the site and emails the mailing list and the author(s).</p>
+
+    <div class="dashboard-form__actions">
+      <button type="submit">Publish &amp; notify</button>
+      <button type="button" id="publish-cancel" class="dashboard-button--secondary">Cancel</button>
+    </div>
+    <p id="publish-status" class="dashboard-status" role="status"></p>
+  </form>
+</div>

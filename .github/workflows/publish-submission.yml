@@ -66,6 +66,7 @@ jobs:
           FROM_EMAIL: ${{ vars.FROM_EMAIL }}
           REPLY_TO: ${{ vars.REPLY_TO }}
           STAGING_EMAIL: ${{ vars.STAGING_EMAIL }}
+          AUTHOR_MESSAGE: ${{ github.event.client_payload.author_message }}
 
       - name: Mark submission published in Supabase
         run: |

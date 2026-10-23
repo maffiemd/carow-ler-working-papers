@@ -43,9 +43,13 @@ what happens once it's accepted.
 
 ## Publishing an accepted paper
 
-**If it's logged in the dashboard**: open it, set a WP number, and click **Accept &
-Publish**. That's it — it builds the cover sheet, commits and pushes, and emails the
-author once it's live, automatically. Skip to "Mint a DOI" below once it's done.
+**If it's logged in the dashboard**: click **Accept & Publish** on the row. A dialog asks
+for the WP number and, optionally, a **message to the author(s)**: feedback or a personal
+note, which appears in their acceptance email under the congratulations (a blank line
+starts a new paragraph; leave it empty to send the standard email). The dialog also lists
+exactly which addresses will be emailed. Click **Publish & notify** and it builds the
+cover sheet, commits and pushes, and emails the author once it's live, automatically.
+Skip to "Mint a DOI" below once it's done.
 
 **Otherwise** (or if you'd rather drive it from the terminal), use the CLI path — it does
 the exact same thing under the hood:

@@ -14,6 +14,8 @@
 //   RESEND_API_KEY
 //   FROM_EMAIL
 // Optional:
+//   AUTHOR_MESSAGE    free-text note from the editors, shown under the
+//                      congratulations (blank lines = new paragraph)
 //   REPLY_TO          comma-separated for several addresses
 //   STAGING_EMAIL     if set, every author email is redirected here instead
 //                      (subject tagged with the real intended recipient) -
@@ -44,7 +46,26 @@ function escapeHtml(text) {
     .replace(/"/g, "&quot;");
 }
 
-function renderEmailHtml({ authorName, title, wpLabel, paperUrl, siteUrl, seriesName }) {
+// The editors' free-text note: blank lines start a new paragraph, single
+// line breaks are kept as line breaks.
+function messageToHtml(message) {
+  return message
+    .split(/\n{2,}/)
+    .map((paragraph) => escapeHtml(paragraph.trim()).replace(/\n/g, "<br>"))
+    .filter(Boolean)
+    .map((paragraph) => `<p style="margin:16px 0 0;line-height:1.6;">${paragraph}</p>`)
+    .join("\n      ");
+}
+
+function renderEmailHtml({ authorName, title, wpLabel, paperUrl, siteUrl, seriesName, message }) {
+  const congrats = `Congratulations! Your paper is now live as <a href="${paperUrl}" style="color:${COLOR_RED_DARK};">${escapeHtml(wpLabel)}</a>.`;
+  const outro = `We've also announced it to the series mailing list, so subscribers will see it shortly. Please feel free to share the link with colleagues or post it on your own site. If you spot a problem with the paper page or the PDF, just reply to this email.`;
+  // With no note, keep the original single-paragraph layout.
+  const body = message
+    ? `<p style="margin:16px 0 0;line-height:1.6;">${congrats}</p>
+      ${messageToHtml(message)}
+      <p style="margin:16px 0 0;line-height:1.6;">${outro}</p>`
+    : `<p style="margin:16px 0 0;line-height:1.6;">${congrats} ${outro}</p>`;
   return `<!doctype html>
 <html>
   <body style="margin:0;padding:0;background:#ffffff;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;color:${COLOR_INK};">
@@ -52,9 +73,7 @@ function renderEmailHtml({ authorName, title, wpLabel, paperUrl, siteUrl, series
       <p style="color:${COLOR_MUTED};font-size:0.85rem;margin:0 0 4px;text-transform:uppercase;letter-spacing:0.03em;">Your paper is published &middot; ${escapeHtml(wpLabel)}</p>
       <h1 style="font-size:1.4rem;margin:0 0 8px;">${escapeHtml(title)}</h1>
       <p style="margin:20px 0 0;line-height:1.6;">Dear ${escapeHtml(authorName)},</p>
-      <p style="margin:16px 0 0;line-height:1.6;">
-        Congratulations! Your paper is now live as <a href="${paperUrl}" style="color:${COLOR_RED_DARK};">${escapeHtml(wpLabel)}</a>. We've also announced it to the series mailing list, so subscribers will see it shortly. Please feel free to share the link with colleagues or post it on your own site. If you spot a problem with the paper page or the PDF, just reply to this email.
-      </p>
+      ${body}
       <p style="margin-top:24px;line-height:1.6;">Thank you for submitting to the series.</p>
       <p style="margin:0;line-height:1.6;">Best,<br>Kourtney Koebel and Michael Maffie<br>Editors, ${escapeHtml(seriesName)}</p>
       <hr style="margin:32px 0;border:none;border-top:1px solid ${COLOR_BORDER};">
@@ -87,7 +106,10 @@ async function main() {
   const wpLabel = `${seriesPrefix}-${wpNumber}`;
   const paperUrl = `${siteUrl}/papers/${slug}/`;
   const subject = `Your paper is published: ${title}`;
-  const text = `Congratulations! Your paper is now live as ${wpLabel} (${paperUrl}). We've also announced it to the series mailing list, so subscribers will see it shortly. Please feel free to share the link with colleagues or post it on your own site. If you spot a problem with the paper page or the PDF, just reply to this email.
+  const message = (process.env.AUTHOR_MESSAGE || "").replace(/\r\n?/g, "\n").trim();
+  const congrats = `Congratulations! Your paper is now live as ${wpLabel} (${paperUrl}).`;
+  const outro = `We've also announced it to the series mailing list, so subscribers will see it shortly. Please feel free to share the link with colleagues or post it on your own site. If you spot a problem with the paper page or the PDF, just reply to this email.`;
+  const text = `${message ? `${congrats}\n\n${message}\n\n${outro}` : `${congrats} ${outro}`}
 
 Thank you for submitting to the series.
 
@@ -108,6 +130,7 @@ ${siteUrl}`;
       paperUrl,
       siteUrl,
       seriesName: "CAROW LER Working Papers",
+      message,
     }),
     text: `Dear ${author.name},\n\n${text}`,
   }));

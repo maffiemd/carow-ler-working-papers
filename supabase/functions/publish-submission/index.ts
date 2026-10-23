@@ -126,6 +126,7 @@ Deno.serve(async (req) => {
         title: submission.title,
         authors: submission.authors,
         abstract: submission.abstract ?? "",
+        author_message: submission.author_message ?? "",
         manuscript_url: signedUrlData.signedUrl,
       },
     }),
