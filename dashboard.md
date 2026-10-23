@@ -62,6 +62,7 @@ permalink: /dashboard/
 
     <label for="add-abstract">Abstract</label>
     <textarea id="add-abstract" rows="4"></textarea>
+    <p class="dashboard-hint">Pasted text is cleaned up automatically: line breaks from the PDF are joined into paragraphs. Undo (Cmd/Ctrl+Z) restores what you pasted.</p>
 
     <label for="add-assigned">Assigned to</label>
     <select id="add-assigned"></select>

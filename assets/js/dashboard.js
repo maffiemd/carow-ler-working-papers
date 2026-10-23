@@ -423,6 +423,35 @@
 
   showHiddenCheckbox.addEventListener("change", loadSubmissions);
 
+  // Text copied out of a PDF has a hard line break at the end of every visual
+  // line. Join those back into flowing paragraphs, keeping real paragraph
+  // breaks (blank lines). A hyphen at a line end is left in place: it's
+  // usually a split word ("collec-tive"), but could be a real compound
+  // ("labor-management"), and silently deleting it would corrupt the latter.
+  function cleanPastedText(text) {
+    var PARAGRAPH = "\u0000";
+    return text
+      .replace(/\r\n?/g, "\n")
+      .replace(/\n[ \t]*\n(?:[ \t]*\n)*/g, PARAGRAPH)
+      .replace(/-\n[ \t]*(?=\S)/g, "-")
+      .replace(/[ \t]*\n[ \t]*/g, " ")
+      .replace(/[ \t]{2,}/g, " ")
+      .replace(new RegExp(PARAGRAPH, "g"), "\n\n")
+      .trim();
+  }
+
+  document.getElementById("add-abstract").addEventListener("paste", function (event) {
+    var pasted = event.clipboardData && event.clipboardData.getData("text/plain");
+    if (!pasted) return;
+    event.preventDefault();
+    var cleaned = cleanPastedText(pasted);
+    // execCommand keeps the browser's undo stack, so Ctrl/Cmd+Z restores
+    // the original text if the cleanup wasn't wanted.
+    if (!document.execCommand("insertText", false, cleaned)) {
+      this.setRangeText(cleaned, this.selectionStart, this.selectionEnd, "end");
+    }
+  });
+
   addForm.addEventListener("submit", async function (event) {
     event.preventDefault();
     var submitButton = addForm.querySelector('button[type="submit"]');
