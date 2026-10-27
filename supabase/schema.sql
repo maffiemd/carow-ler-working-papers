@@ -93,6 +93,29 @@ create policy "editors can manage manuscript files" on storage.objects
   using (bucket_id = 'manuscripts' and auth.role() = 'authenticated')
   with check (bucket_id = 'manuscripts' and auth.role() = 'authenticated');
 
+-- Editorial board members' emails, for the dashboard's "invite a board
+-- member to help review" feature (invite-board-member Edge Function).
+-- Only the two series editors ever sign in (see above), so board members
+-- themselves never read this table - it exists purely so the Edge
+-- Function can resolve a name (from the "Assigned to" dropdown, which is
+-- seeded from _config.yml's `editors` + `editorial_board` lists) to an
+-- email without that email ever reaching the public site, the public git
+-- repo, or the browser. Populate this by hand in the Table Editor - name
+-- must match a name in _config.yml's `editorial_board` list exactly.
+create table if not exists board_members (
+  id uuid primary key default gen_random_uuid(),
+  name text not null unique,
+  email text not null,
+  created_at timestamptz not null default now()
+);
+
+alter table board_members enable row level security;
+
+drop policy if exists "editors can read board members" on board_members;
+create policy "editors can read board members" on board_members
+  for select
+  using (auth.role() = 'authenticated');
+
 -- Calls the notify-owner Edge Function whenever a new row lands in
 -- `subscribers`, using pg_net directly instead of the dashboard's "Database
 -- Webhooks" UI. That UI depends on a one-time platform-managed schema

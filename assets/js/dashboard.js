@@ -279,6 +279,15 @@
   var emailStatus = document.getElementById("email-status");
   var emailingSubmission = null;
 
+  var PRIMARY_EDITORS = ["Kourtney Koebel", "Michael Maffie"];
+  var inviteBoardModal = document.getElementById("invite-board-modal");
+  var inviteBoardForm = document.getElementById("invite-board-form");
+  var inviteBoardSubject = document.getElementById("invite-board-subject");
+  var inviteBoardBody = document.getElementById("invite-board-body");
+  var inviteBoardStatus = document.getElementById("invite-board-status");
+  var invitingSubmission = null;
+  var invitingAssigneeName = null;
+
   function joinNames(names) {
     if (names.length <= 1) return names.join("");
     if (names.length === 2) return names[0] + " and " + names[1];
@@ -445,6 +454,71 @@
     if (event.key === "Escape" && !emailModal.hidden) closeEmailModal();
   });
 
+  function openInviteBoardModal(submission, assigneeName) {
+    invitingSubmission = submission;
+    invitingAssigneeName = assigneeName;
+    document.getElementById("invite-board-title").textContent = submission.title;
+    inviteBoardSubject.value = "Could you help review a submission to CAROW LER Working Papers?";
+    inviteBoardBody.value =
+      "Dear " + assigneeName + ",\n\n" +
+      "We've assigned \"" + submission.title + "\" to you and would appreciate your help reviewing it. The manuscript is attached.\n\n" +
+      "Thank you,\nKourtney Koebel and Michael Maffie\nEditors, CAROW LER Working Papers";
+    document.getElementById("invite-board-recipient").textContent = "Will email: " + assigneeName;
+    inviteBoardStatus.textContent = "";
+    inviteBoardModal.hidden = false;
+    inviteBoardSubject.focus();
+  }
+
+  function closeInviteBoardModal() {
+    inviteBoardModal.hidden = true;
+    invitingSubmission = null;
+    invitingAssigneeName = null;
+  }
+
+  async function sendBoardInvite(preview) {
+    var submission = invitingSubmission;
+    if (!submission) return;
+    var subject = inviteBoardSubject.value.trim();
+    var body = inviteBoardBody.value.trim();
+    if (!subject || !body) {
+      inviteBoardStatus.textContent = "The subject and message can't be empty.";
+      return;
+    }
+    if (!preview) {
+      if (!confirm("Send this request to " + invitingAssigneeName + "? This can't be undone.")) return;
+    }
+
+    var buttons = inviteBoardForm.querySelectorAll("button");
+    buttons.forEach(function (b) { b.disabled = true; });
+    inviteBoardStatus.textContent = preview ? "Sending preview…" : "Sending…";
+
+    var { data, error } = await supabase.functions.invoke("invite-board-member", {
+      body: { submission_id: submission.id, assignee_name: invitingAssigneeName, subject: subject, body: body, preview: preview },
+    });
+    buttons.forEach(function (b) { b.disabled = false; });
+    if (error) {
+      inviteBoardStatus.textContent = "Failed: " + (await functionErrorMessage(error));
+      return;
+    }
+
+    if (preview) {
+      inviteBoardStatus.textContent = "Preview sent to " + (data && data.to ? data.to.join(", ") : "you") + ".";
+      return;
+    }
+    closeInviteBoardModal();
+    alert("Request sent to " + invitingAssigneeName + ".");
+  }
+
+  inviteBoardForm.addEventListener("submit", function (event) {
+    event.preventDefault();
+    sendBoardInvite(false);
+  });
+  document.getElementById("invite-board-preview").addEventListener("click", function () { sendBoardInvite(true); });
+  document.getElementById("invite-board-cancel").addEventListener("click", closeInviteBoardModal);
+  document.addEventListener("keydown", function (event) {
+    if (event.key === "Escape" && !inviteBoardModal.hidden) closeInviteBoardModal();
+  });
+
   function buildActionMenu(items) {
     var wrapper = document.createElement("div");
     wrapper.className = "dashboard-action-menu";
@@ -522,10 +596,17 @@
       assignedSelectEl.appendChild(opt);
     });
     assignedSelectEl.addEventListener("change", async function () {
+      var newAssignee = assignedSelectEl.value;
       await supabase
         .from("submissions")
-        .update({ assigned_to: assignedSelectEl.value, updated_at: new Date().toISOString() })
+        .update({ assigned_to: newAssignee, updated_at: new Date().toISOString() })
         .eq("id", submission.id);
+      if (PRIMARY_EDITORS.indexOf(newAssignee) === -1) {
+        if (confirm("Email " + newAssignee + " to ask for help reviewing this paper?")) {
+          submission.assigned_to = newAssignee;
+          openInviteBoardModal(submission, newAssignee);
+        }
+      }
     });
     assignedTd.appendChild(assignedSelectEl);
     tr.appendChild(assignedTd);
