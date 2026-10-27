@@ -192,3 +192,26 @@ permalink: /dashboard/
     <p id="email-status" class="dashboard-status" role="status"></p>
   </form>
 </div>
+
+<div id="invite-board-modal" class="dashboard-modal" hidden>
+  <form id="invite-board-form" class="dashboard-form">
+    <h2>Ask for help reviewing</h2>
+    <p id="invite-board-title" class="dashboard-hint"></p>
+
+    <label for="invite-board-subject">Subject</label>
+    <input type="text" id="invite-board-subject" required>
+
+    <label for="invite-board-body">Message</label>
+    <textarea id="invite-board-body" rows="14" required></textarea>
+    <p class="dashboard-hint">A blank line starts a new paragraph. The manuscript will be attached automatically.</p>
+    <p id="invite-board-recipient" class="dashboard-hint"></p>
+    <p class="dashboard-hint">Sending can't be undone. Use <strong>Send preview to me</strong> first to see exactly how it will look.</p>
+
+    <div class="dashboard-form__actions">
+      <button type="submit" id="invite-board-send">Send request</button>
+      <button type="button" id="invite-board-preview" class="dashboard-button--secondary">Send preview to me</button>
+      <button type="button" id="invite-board-cancel" class="dashboard-button--secondary">Cancel</button>
+    </div>
+    <p id="invite-board-status" class="dashboard-status" role="status"></p>
+  </form>
+</div>

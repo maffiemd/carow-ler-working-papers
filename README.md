@@ -228,14 +228,26 @@ at [github.com/settings/tokens](https://github.com/settings/tokens):
 supabase functions deploy publish-submission
 supabase functions deploy reject-submission
 supabase functions deploy email-authors
+supabase functions deploy invite-board-member
 ```
 (No `--no-verify-jwt` on any of these, unlike `notify-owner` — they *should* require a
 valid signed-in session, since the dashboard calls them on the editor's behalf.
-`reject-submission` sends the "Reject & notify" letter and `email-authors` sends the
+`reject-submission` sends the "Reject & notify" letter, `email-authors` sends the
 "Email authors" message (same letter layout, but doesn't touch the submission's status),
-using the same `RESEND_API_KEY`, `NOTIFY_FROM_EMAIL`, `REPLY_TO`, and `SITE_URL` Supabase
-secrets as `notify-owner`, so make sure `NOTIFY_FROM_EMAIL` is the series address, not a
-leftover placeholder.)
+and `invite-board-member` sends the "ask a board member to help review" message with the
+manuscript attached (see below), using the same `RESEND_API_KEY`, `NOTIFY_FROM_EMAIL`,
+`REPLY_TO`, and `SITE_URL` Supabase secrets as `notify-owner`, so make sure
+`NOTIFY_FROM_EMAIL` is the series address, not a leftover placeholder.)
+
+`invite-board-member` additionally needs the `board_members` table (added by
+`supabase/schema.sql` — re-run it in the SQL Editor if your project predates this table) to
+be populated by hand: the dashboard's "Assigned to" dropdown only ever has a *name* (from
+`_config.yml`'s `editors` + `editorial_board` lists, which is public), and board members
+other than the two series editors never sign in, so there's nowhere else to resolve a name
+to an email without either exposing it on the public site or committing it to the public
+repo. In the Supabase Table Editor, add one row per board member to `board_members` with
+`name` matching their `_config.yml` entry exactly and their real `email` — nothing here is
+pre-seeded.
 
 Test the whole flow by adding a real test submission on `/dashboard/`, clicking
 **Accept & Publish**, and confirming: the paper appears on the live site with a correct
