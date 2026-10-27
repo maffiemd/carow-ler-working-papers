@@ -498,16 +498,13 @@
     tr.appendChild(manuscriptTd);
 
     var actionsTd = document.createElement("td");
+    var menuItems = [];
     if (submission.status === "published") {
       var publishedLabel = document.createElement("div");
       publishedLabel.textContent = "Published (" + (submission.wp_number || "") + ")";
       actionsTd.appendChild(publishedLabel);
     } else {
-      var publishButton = document.createElement("button");
-      publishButton.type = "button";
-      publishButton.textContent = "Accept & Publish";
-      publishButton.addEventListener("click", function () { openPublishModal(submission); });
-      actionsTd.appendChild(publishButton);
+      menuItems.push({ label: "Accept & Publish", handler: function () { openPublishModal(submission); } });
 
       if (submission.rejection_letter) {
         var sentLabel = document.createElement("div");
@@ -515,32 +512,17 @@
         sentLabel.textContent = "Rejection letter sent";
         actionsTd.appendChild(sentLabel);
       } else {
-        var rejectButton = document.createElement("button");
-        rejectButton.type = "button";
-        rejectButton.className = "dashboard-button--secondary dashboard-button--small dashboard-button--danger";
-        rejectButton.style.marginTop = "0.4rem";
-        rejectButton.textContent = "Reject & notify";
-        rejectButton.addEventListener("click", function () { openRejectModal(submission); });
-        actionsTd.appendChild(rejectButton);
+        menuItems.push({ label: "Reject & notify", handler: function () { openRejectModal(submission); }, danger: true });
       }
     }
 
-    var rowActions = document.createElement("div");
-    rowActions.className = "dashboard-row-actions";
-    function addRowAction(label, handler, extraClass) {
-      var button = document.createElement("button");
-      button.type = "button";
-      button.className = "dashboard-button--secondary dashboard-button--small" + (extraClass ? " " + extraClass : "");
-      button.textContent = label;
-      button.addEventListener("click", handler);
-      rowActions.appendChild(button);
-    }
-    addRowAction("Edit", function () { openEditForm(submission); });
-    addRowAction(submission.hidden ? "Unhide" : "Hide", function () { setHidden(submission, !submission.hidden); });
+    menuItems.push({ label: "Edit", handler: function () { openEditForm(submission); } });
+    menuItems.push({ label: submission.hidden ? "Unhide" : "Hide", handler: function () { setHidden(submission, !submission.hidden); } });
     if (submission.hidden) {
-      addRowAction("Delete permanently", function () { deletePermanently(submission); }, "dashboard-button--danger");
+      menuItems.push({ label: "Delete permanently", handler: function () { deletePermanently(submission); }, danger: true });
     }
-    actionsTd.appendChild(rowActions);
+
+    actionsTd.appendChild(buildActionMenu(menuItems));
     tr.appendChild(actionsTd);
 
     return tr;
