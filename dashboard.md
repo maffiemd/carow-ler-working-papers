@@ -80,9 +80,10 @@ permalink: /dashboard/
     <label for="add-title">Title</label>
     <input type="text" id="add-title" required>
 
-    <label for="add-authors">Authors</label>
-    <textarea id="add-authors" rows="3" placeholder="Jane Doe (MIT) &lt;jane@mit.edu&gt;; John Smith (Yale) &lt;jsmith@yale.edu&gt;" required></textarea>
-    <p class="dashboard-hint">One author per line or separated by ";" — format: Name (Affiliation) &lt;email&gt;</p>
+    <label>Authors</label>
+    <div id="authors-list"></div>
+    <button type="button" id="add-author-row" class="dashboard-button--secondary dashboard-button--small">Add author</button>
+    <p class="dashboard-hint">At least one author is required.</p>
 
     <label for="add-abstract">Abstract</label>
     <textarea id="add-abstract" rows="4"></textarea>
