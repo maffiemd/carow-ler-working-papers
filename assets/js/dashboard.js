@@ -368,6 +368,54 @@
     if (event.key === "Escape" && !rejectModal.hidden) closeRejectModal();
   });
 
+  function buildActionMenu(items) {
+    var wrapper = document.createElement("div");
+    wrapper.className = "dashboard-action-menu";
+
+    var toggle = document.createElement("button");
+    toggle.type = "button";
+    toggle.className = "dashboard-button--secondary dashboard-button--small dashboard-action-toggle";
+    toggle.textContent = "Action";
+
+    var dropdown = document.createElement("div");
+    dropdown.className = "dashboard-action-dropdown";
+    dropdown.hidden = true;
+
+    items.forEach(function (item) {
+      var itemButton = document.createElement("button");
+      itemButton.type = "button";
+      itemButton.className = "dashboard-button--secondary dashboard-button--small" + (item.danger ? " dashboard-button--danger" : "");
+      itemButton.textContent = item.label;
+      itemButton.addEventListener("click", function () {
+        dropdown.hidden = true;
+        item.handler();
+      });
+      dropdown.appendChild(itemButton);
+    });
+
+    toggle.addEventListener("click", function (event) {
+      event.stopPropagation();
+      dropdown.hidden = !dropdown.hidden;
+    });
+
+    wrapper.appendChild(toggle);
+    wrapper.appendChild(dropdown);
+    return wrapper;
+  }
+
+  document.addEventListener("click", function () {
+    document.querySelectorAll(".dashboard-action-dropdown").forEach(function (menu) {
+      menu.hidden = true;
+    });
+  });
+  document.addEventListener("keydown", function (event) {
+    if (event.key === "Escape") {
+      document.querySelectorAll(".dashboard-action-dropdown").forEach(function (menu) {
+        menu.hidden = true;
+      });
+    }
+  });
+
   function renderRow(submission) {
     var tr = document.createElement("tr");
     if (submission.hidden) tr.className = "dashboard-row--hidden";
@@ -436,30 +484,17 @@
     notesTd.appendChild(notesInput);
     tr.appendChild(notesTd);
 
-    var manuscriptTd = document.createElement("td");
-    if (submission.manuscript_path) {
-      var dlButton = document.createElement("button");
-      dlButton.type = "button";
-      dlButton.className = "dashboard-button--secondary";
-      dlButton.textContent = "Download";
-      dlButton.addEventListener("click", function () { downloadManuscript(submission.manuscript_path); });
-      manuscriptTd.appendChild(dlButton);
-    } else {
-      manuscriptTd.textContent = "—";
-    }
-    tr.appendChild(manuscriptTd);
-
     var actionsTd = document.createElement("td");
+    var menuItems = [];
+    if (submission.manuscript_path) {
+      menuItems.push({ label: "Download manuscript", handler: function () { downloadManuscript(submission.manuscript_path); } });
+    }
     if (submission.status === "published") {
       var publishedLabel = document.createElement("div");
       publishedLabel.textContent = "Published (" + (submission.wp_number || "") + ")";
       actionsTd.appendChild(publishedLabel);
     } else {
-      var publishButton = document.createElement("button");
-      publishButton.type = "button";
-      publishButton.textContent = "Accept & Publish";
-      publishButton.addEventListener("click", function () { openPublishModal(submission); });
-      actionsTd.appendChild(publishButton);
+      menuItems.push({ label: "Accept & Publish", handler: function () { openPublishModal(submission); } });
 
       if (submission.rejection_letter) {
         var sentLabel = document.createElement("div");
@@ -467,32 +502,17 @@
         sentLabel.textContent = "Rejection letter sent";
         actionsTd.appendChild(sentLabel);
       } else {
-        var rejectButton = document.createElement("button");
-        rejectButton.type = "button";
-        rejectButton.className = "dashboard-button--secondary dashboard-button--small dashboard-button--danger";
-        rejectButton.style.marginTop = "0.4rem";
-        rejectButton.textContent = "Reject & notify";
-        rejectButton.addEventListener("click", function () { openRejectModal(submission); });
-        actionsTd.appendChild(rejectButton);
+        menuItems.push({ label: "Reject & notify", handler: function () { openRejectModal(submission); }, danger: true });
       }
     }
 
-    var rowActions = document.createElement("div");
-    rowActions.className = "dashboard-row-actions";
-    function addRowAction(label, handler, extraClass) {
-      var button = document.createElement("button");
-      button.type = "button";
-      button.className = "dashboard-button--secondary dashboard-button--small" + (extraClass ? " " + extraClass : "");
-      button.textContent = label;
-      button.addEventListener("click", handler);
-      rowActions.appendChild(button);
-    }
-    addRowAction("Edit", function () { openEditForm(submission); });
-    addRowAction(submission.hidden ? "Unhide" : "Hide", function () { setHidden(submission, !submission.hidden); });
+    menuItems.push({ label: "Edit", handler: function () { openEditForm(submission); } });
+    menuItems.push({ label: submission.hidden ? "Unhide" : "Hide", handler: function () { setHidden(submission, !submission.hidden); } });
     if (submission.hidden) {
-      addRowAction("Delete permanently", function () { deletePermanently(submission); }, "dashboard-button--danger");
+      menuItems.push({ label: "Delete permanently", handler: function () { deletePermanently(submission); }, danger: true });
     }
-    actionsTd.appendChild(rowActions);
+
+    actionsTd.appendChild(buildActionMenu(menuItems));
     tr.appendChild(actionsTd);
 
     return tr;
