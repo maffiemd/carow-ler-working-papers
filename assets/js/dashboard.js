@@ -49,49 +49,62 @@
     });
   }
 
-  // Parses "Name (Affiliation) <email>; Name2 (Affiliation2) <email2>" (or
-  // one per line) into [{name, affiliation, email}]. Missing parts are left
-  // empty rather than rejected, since editors may not always have an email
-  // or affiliation on hand when first logging a submission.
-  function parseAuthors(raw) {
-    return raw
-      .split(/[;\n]+/)
-      .map(function (s) { return s.trim(); })
-      .filter(Boolean)
-      .map(function (entry) {
-        var email = "";
-        var emailMatch = entry.match(/<([^>]*)>/);
-        if (emailMatch) {
-          email = emailMatch[1].trim();
-          entry = entry.replace(emailMatch[0], "").trim();
-        }
-        var affiliation = "";
-        var affMatch = entry.match(/\(([^)]*)\)/);
-        if (affMatch) {
-          affiliation = affMatch[1].trim();
-          entry = entry.replace(affMatch[0], "").trim();
-        }
-        return { name: entry, affiliation: affiliation, email: email };
-      });
-  }
-
   function formatAuthors(authors) {
     return (authors || [])
       .map(function (a) { return a.affiliation ? a.name + " (" + a.affiliation + ")" : a.name; })
       .join(", ");
   }
 
-  // Inverse of parseAuthors: one "Name (Affiliation) <email>" per line.
-  function formatAuthorsForEdit(authors) {
-    return (authors || [])
-      .map(function (a) {
-        var line = a.name || "";
-        if (a.affiliation) line += " (" + a.affiliation + ")";
-        if (a.email) line += " <" + a.email + ">";
-        return line;
-      })
-      .join("\n");
+  var authorsList = document.getElementById("authors-list");
+
+  function addAuthorRow(author) {
+    var row = document.createElement("div");
+    row.className = "author-row";
+
+    var nameInput = document.createElement("input");
+    nameInput.type = "text";
+    nameInput.placeholder = "Name";
+    nameInput.className = "author-row__name";
+    nameInput.value = (author && author.name) || "";
+
+    var affiliationInput = document.createElement("input");
+    affiliationInput.type = "text";
+    affiliationInput.placeholder = "Affiliation";
+    affiliationInput.className = "author-row__affiliation";
+    affiliationInput.value = (author && author.affiliation) || "";
+
+    var emailInput = document.createElement("input");
+    emailInput.type = "email";
+    emailInput.placeholder = "Email";
+    emailInput.className = "author-row__email";
+    emailInput.value = (author && author.email) || "";
+
+    var removeButton = document.createElement("button");
+    removeButton.type = "button";
+    removeButton.className = "dashboard-button--secondary dashboard-button--small author-row__remove";
+    removeButton.textContent = "Remove";
+    removeButton.addEventListener("click", function () { row.remove(); });
+
+    row.appendChild(nameInput);
+    row.appendChild(affiliationInput);
+    row.appendChild(emailInput);
+    row.appendChild(removeButton);
+    authorsList.appendChild(row);
   }
+
+  function collectAuthors() {
+    return Array.from(authorsList.querySelectorAll(".author-row"))
+      .map(function (row) {
+        return {
+          name: row.querySelector(".author-row__name").value.trim(),
+          affiliation: row.querySelector(".author-row__affiliation").value.trim(),
+          email: row.querySelector(".author-row__email").value.trim(),
+        };
+      })
+      .filter(function (a) { return a.name || a.affiliation || a.email; });
+  }
+
+  document.getElementById("add-author-row").addEventListener("click", function () { addAuthorRow(); });
 
   function resetAddForm() {
     editingSubmission = null;
@@ -103,6 +116,8 @@
     manuscriptHint.hidden = true;
     publishedHint.hidden = true;
     addStatus.textContent = "";
+    authorsList.innerHTML = "";
+    addAuthorRow();
   }
 
   function openEditForm(submission) {
@@ -112,7 +127,8 @@
     addFormTitle.textContent = "Edit submission";
     addSubmitButton.textContent = "Save changes";
     document.getElementById("add-title").value = submission.title || "";
-    document.getElementById("add-authors").value = formatAuthorsForEdit(submission.authors);
+    authorsList.innerHTML = "";
+    (submission.authors && submission.authors.length ? submission.authors : [null]).forEach(function (a) { addAuthorRow(a); });
     document.getElementById("add-abstract").value = submission.abstract || "";
     assignedSelect.value = submission.assigned_to || "";
     receivedInput.value = submission.received_date || "";
@@ -867,12 +883,18 @@
     addStatus.textContent = "Saving…";
 
     var title = document.getElementById("add-title").value.trim();
-    var authors = parseAuthors(document.getElementById("add-authors").value);
+    var authors = collectAuthors();
     var abstract = document.getElementById("add-abstract").value.trim();
     var assignedTo = assignedSelect.value;
     var receivedDate = receivedInput.value;
     var file = manuscriptInput.files[0];
     var editing = editingSubmission;
+
+    if (!authors.length) {
+      addStatus.textContent = "At least one author is required.";
+      submitButton.disabled = false;
+      return;
+    }
 
     if (!file && !editing) {
       addStatus.textContent = "Please attach a manuscript PDF.";
