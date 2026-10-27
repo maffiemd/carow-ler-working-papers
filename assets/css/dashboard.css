@@ -164,7 +164,8 @@ button.dashboard-button--secondary {
 }
 
 .dashboard-action-menu { position: relative; display: inline-block; }
-.dashboard-action-toggle { margin-top: 0.4rem; padding: 0.3rem 0.4rem; font: inherit; }
+.dashboard-action-menu:not(:first-child) { margin-top: 0.4rem; }
+.dashboard-action-toggle { padding: 0.3rem 0.4rem; font: inherit; }
 .dashboard-action-dropdown {
   position: absolute;
   top: 100%;
