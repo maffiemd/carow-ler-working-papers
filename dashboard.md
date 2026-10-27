@@ -92,8 +92,7 @@ permalink: /dashboard/
           <th>Received</th>
           <th>Status</th>
           <th>Decision notes</th>
-          <th>Manuscript</th>
-          <th></th>
+          <th>Actions</th>
         </tr>
       </thead>
       <tbody id="submissions-tbody"></tbody>

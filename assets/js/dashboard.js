@@ -484,21 +484,11 @@
     notesTd.appendChild(notesInput);
     tr.appendChild(notesTd);
 
-    var manuscriptTd = document.createElement("td");
-    if (submission.manuscript_path) {
-      var dlButton = document.createElement("button");
-      dlButton.type = "button";
-      dlButton.className = "dashboard-button--secondary";
-      dlButton.textContent = "Download";
-      dlButton.addEventListener("click", function () { downloadManuscript(submission.manuscript_path); });
-      manuscriptTd.appendChild(dlButton);
-    } else {
-      manuscriptTd.textContent = "—";
-    }
-    tr.appendChild(manuscriptTd);
-
     var actionsTd = document.createElement("td");
     var menuItems = [];
+    if (submission.manuscript_path) {
+      menuItems.push({ label: "Download manuscript", handler: function () { downloadManuscript(submission.manuscript_path); } });
+    }
     if (submission.status === "published") {
       var publishedLabel = document.createElement("div");
       publishedLabel.textContent = "Published (" + (submission.wp_number || "") + ")";
