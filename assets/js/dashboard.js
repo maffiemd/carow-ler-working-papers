@@ -272,6 +272,13 @@
   var rejectStatus = document.getElementById("reject-status");
   var rejectingSubmission = null;
 
+  var emailModal = document.getElementById("email-modal");
+  var emailForm = document.getElementById("email-form");
+  var emailSubject = document.getElementById("email-subject");
+  var emailBody = document.getElementById("email-body");
+  var emailStatus = document.getElementById("email-status");
+  var emailingSubmission = null;
+
   function joinNames(names) {
     if (names.length <= 1) return names.join("");
     if (names.length === 2) return names[0] + " and " + names[1];
@@ -371,6 +378,71 @@
   document.getElementById("reject-cancel").addEventListener("click", closeRejectModal);
   document.addEventListener("keydown", function (event) {
     if (event.key === "Escape" && !rejectModal.hidden) closeRejectModal();
+  });
+
+  function openEmailModal(submission) {
+    emailingSubmission = submission;
+    document.getElementById("email-title").textContent = submission.title;
+    emailSubject.value = "Regarding your submission to CAROW LER Working Papers: " + submission.title;
+    emailBody.value = "";
+    var emails = authorEmails(submission);
+    document.getElementById("email-recipients").textContent = emails.length
+      ? "Will email: " + emails.join(", ")
+      : "No author email is on file, so nothing can be sent.";
+    document.getElementById("email-send").disabled = emails.length === 0;
+    emailStatus.textContent = "";
+    emailModal.hidden = false;
+    emailSubject.focus();
+  }
+
+  function closeEmailModal() {
+    emailModal.hidden = true;
+    emailingSubmission = null;
+  }
+
+  async function sendAuthorEmail(preview) {
+    var submission = emailingSubmission;
+    if (!submission) return;
+    var subject = emailSubject.value.trim();
+    var body = emailBody.value.trim();
+    if (!subject || !body) {
+      emailStatus.textContent = "The subject and message can't be empty.";
+      return;
+    }
+    if (!preview) {
+      var emails = authorEmails(submission);
+      if (!confirm("Send this email to " + emails.join(", ") + "? This can't be undone.")) return;
+    }
+
+    var buttons = emailForm.querySelectorAll("button");
+    buttons.forEach(function (b) { b.disabled = true; });
+    emailStatus.textContent = preview ? "Sending preview…" : "Sending…";
+
+    var { data, error } = await supabase.functions.invoke("email-authors", {
+      body: { submission_id: submission.id, subject: subject, body: body, preview: preview },
+    });
+    buttons.forEach(function (b) { b.disabled = false; });
+    if (error) {
+      emailStatus.textContent = "Failed: " + (await functionErrorMessage(error));
+      return;
+    }
+
+    if (preview) {
+      emailStatus.textContent = "Preview sent to " + (data && data.to ? data.to.join(", ") : "you") + ".";
+      return;
+    }
+    closeEmailModal();
+    alert("Email sent to " + data.emailed + " address" + (data.emailed === 1 ? "" : "es") + ".");
+  }
+
+  emailForm.addEventListener("submit", function (event) {
+    event.preventDefault();
+    sendAuthorEmail(false);
+  });
+  document.getElementById("email-preview").addEventListener("click", function () { sendAuthorEmail(true); });
+  document.getElementById("email-cancel").addEventListener("click", closeEmailModal);
+  document.addEventListener("keydown", function (event) {
+    if (event.key === "Escape" && !emailModal.hidden) closeEmailModal();
   });
 
   function buildActionMenu(items) {
@@ -511,6 +583,7 @@
       }
     }
 
+    menuItems.push({ label: "Email authors", handler: function () { openEmailModal(submission); } });
     menuItems.push({ label: "Edit", handler: function () { openEditForm(submission); } });
     menuItems.push({ label: submission.hidden ? "Unhide" : "Hide", handler: function () { setHidden(submission, !submission.hidden); } });
     if (submission.hidden) {
