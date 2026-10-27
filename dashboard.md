@@ -20,6 +20,8 @@ permalink: /dashboard/
 
   <p class="dashboard-hint"><a href="#" id="show-accept-invite">Have an invite code instead?</a></p>
 
+  <p class="dashboard-hint"><a href="#" id="show-reset-password">Forgot your password?</a></p>
+
   <form id="accept-invite-form" class="dashboard-form" hidden>
     <h2>Accept your invite</h2>
     <p class="dashboard-hint">
@@ -38,6 +40,28 @@ permalink: /dashboard/
     </div>
     <button type="submit">Set password &amp; sign in</button>
     <p id="accept-invite-status" class="dashboard-status" role="status"></p>
+  </form>
+
+  <form id="reset-password-form" class="dashboard-form" hidden>
+    <h2>Reset your password</h2>
+    <p class="dashboard-hint">
+      Click "Send code", then use the 6-digit code from the email — not the
+      button/link in it — many institutional email systems auto-scan links
+      before you ever see them, which uses up the link's one-time token. The
+      code is unaffected by that.
+    </p>
+    <label for="reset-email">Email</label>
+    <input type="email" id="reset-email" required autocomplete="username">
+    <button type="button" id="reset-send-code" class="dashboard-button--secondary">Send code</button>
+    <label for="reset-code">Reset code</label>
+    <input type="text" id="reset-code" inputmode="numeric" pattern="[0-9]*" required autocomplete="one-time-code">
+    <label for="reset-password">New password</label>
+    <div class="dashboard-password-field">
+      <input type="password" id="reset-password" required autocomplete="new-password" minlength="6">
+      <button type="button" class="dashboard-password-toggle" data-target="reset-password" aria-label="Show password">Show</button>
+    </div>
+    <button type="submit">Set new password &amp; sign in</button>
+    <p id="reset-password-status" class="dashboard-status" role="status"></p>
   </form>
 </section>
 

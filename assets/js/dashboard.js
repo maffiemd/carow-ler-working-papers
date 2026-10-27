@@ -12,6 +12,11 @@
   var acceptInviteForm = document.getElementById("accept-invite-form");
   var acceptInviteStatus = document.getElementById("accept-invite-status");
 
+  var showResetPasswordLink = document.getElementById("show-reset-password");
+  var resetPasswordForm = document.getElementById("reset-password-form");
+  var resetPasswordStatus = document.getElementById("reset-password-status");
+  var resetSendCodeButton = document.getElementById("reset-send-code");
+
   var showAddFormButton = document.getElementById("show-add-form");
   var cancelAddFormButton = document.getElementById("cancel-add-form");
   var addForm = document.getElementById("add-form");
@@ -604,6 +609,56 @@
       return;
     }
     acceptInviteStatus.textContent = "";
+    // onAuthStateChange below picks up the new session and shows the dashboard.
+  });
+
+  showResetPasswordLink.addEventListener("click", function (event) {
+    event.preventDefault();
+    resetPasswordForm.hidden = !resetPasswordForm.hidden;
+    showResetPasswordLink.textContent = resetPasswordForm.hidden
+      ? "Forgot your password?"
+      : "Back to password sign-in";
+  });
+
+  resetSendCodeButton.addEventListener("click", async function () {
+    var email = document.getElementById("reset-email").value.trim();
+    if (!email) {
+      resetPasswordStatus.textContent = "Enter your email first.";
+      return;
+    }
+    resetSendCodeButton.disabled = true;
+    resetPasswordStatus.textContent = "Sending code…";
+    var { error } = await supabase.auth.resetPasswordForEmail(email);
+    resetSendCodeButton.disabled = false;
+    resetPasswordStatus.textContent = error
+      ? "Couldn't send a code: " + error.message
+      : "Code sent, check your email.";
+  });
+
+  resetPasswordForm.addEventListener("submit", async function (event) {
+    event.preventDefault();
+    var submitButton = resetPasswordForm.querySelector('button[type="submit"]');
+    submitButton.disabled = true;
+    resetPasswordStatus.textContent = "Verifying…";
+
+    var email = document.getElementById("reset-email").value.trim();
+    var code = document.getElementById("reset-code").value.trim();
+    var newPassword = document.getElementById("reset-password").value;
+
+    var { error: verifyError } = await supabase.auth.verifyOtp({ email: email, token: code, type: "recovery" });
+    if (verifyError) {
+      resetPasswordStatus.textContent = "Couldn't verify that code: " + verifyError.message;
+      submitButton.disabled = false;
+      return;
+    }
+
+    var { error: passwordError } = await supabase.auth.updateUser({ password: newPassword });
+    submitButton.disabled = false;
+    if (passwordError) {
+      resetPasswordStatus.textContent = "Signed in, but couldn't set your password: " + passwordError.message;
+      return;
+    }
+    resetPasswordStatus.textContent = "";
     // onAuthStateChange below picks up the new session and shows the dashboard.
   });
 
