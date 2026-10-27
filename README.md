@@ -227,12 +227,15 @@ at [github.com/settings/tokens](https://github.com/settings/tokens):
 ```bash
 supabase functions deploy publish-submission
 supabase functions deploy reject-submission
+supabase functions deploy email-authors
 ```
-(No `--no-verify-jwt` on either, unlike `notify-owner` — these *should* require a valid
-signed-in session, since the dashboard calls them on the editor's behalf.
-`reject-submission` sends the "Reject & notify" letter, using the same `RESEND_API_KEY`,
-`NOTIFY_FROM_EMAIL`, `REPLY_TO`, and `SITE_URL` Supabase secrets as `notify-owner`, so make
-sure `NOTIFY_FROM_EMAIL` is the series address, not a leftover placeholder.)
+(No `--no-verify-jwt` on any of these, unlike `notify-owner` — they *should* require a
+valid signed-in session, since the dashboard calls them on the editor's behalf.
+`reject-submission` sends the "Reject & notify" letter and `email-authors` sends the
+"Email authors" message (same letter layout, but doesn't touch the submission's status),
+using the same `RESEND_API_KEY`, `NOTIFY_FROM_EMAIL`, `REPLY_TO`, and `SITE_URL` Supabase
+secrets as `notify-owner`, so make sure `NOTIFY_FROM_EMAIL` is the series address, not a
+leftover placeholder.)
 
 Test the whole flow by adding a real test submission on `/dashboard/`, clicking
 **Accept & Publish**, and confirming: the paper appears on the live site with a correct

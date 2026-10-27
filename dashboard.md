@@ -169,3 +169,26 @@ permalink: /dashboard/
     <p id="reject-status" class="dashboard-status" role="status"></p>
   </form>
 </div>
+
+<div id="email-modal" class="dashboard-modal" hidden>
+  <form id="email-form" class="dashboard-form">
+    <h2>Email authors</h2>
+    <p id="email-title" class="dashboard-hint"></p>
+
+    <label for="email-subject">Subject</label>
+    <input type="text" id="email-subject" required>
+
+    <label for="email-body">Message</label>
+    <textarea id="email-body" rows="14" required></textarea>
+    <p class="dashboard-hint">A blank line starts a new paragraph. This does not change the submission's status.</p>
+    <p id="email-recipients" class="dashboard-hint"></p>
+    <p class="dashboard-hint">Sending can't be undone. Use <strong>Send preview to me</strong> first to see exactly how it will look.</p>
+
+    <div class="dashboard-form__actions">
+      <button type="submit" id="email-send">Send email</button>
+      <button type="button" id="email-preview" class="dashboard-button--secondary">Send preview to me</button>
+      <button type="button" id="email-cancel" class="dashboard-button--secondary">Cancel</button>
+    </div>
+    <p id="email-status" class="dashboard-status" role="status"></p>
+  </form>
+</div>
