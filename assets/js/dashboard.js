@@ -368,6 +368,54 @@
     if (event.key === "Escape" && !rejectModal.hidden) closeRejectModal();
   });
 
+  function buildActionMenu(items) {
+    var wrapper = document.createElement("div");
+    wrapper.className = "dashboard-action-menu";
+
+    var toggle = document.createElement("button");
+    toggle.type = "button";
+    toggle.className = "dashboard-button--secondary dashboard-button--small dashboard-action-toggle";
+    toggle.textContent = "Action";
+
+    var dropdown = document.createElement("div");
+    dropdown.className = "dashboard-action-dropdown";
+    dropdown.hidden = true;
+
+    items.forEach(function (item) {
+      var itemButton = document.createElement("button");
+      itemButton.type = "button";
+      itemButton.className = "dashboard-button--secondary dashboard-button--small" + (item.danger ? " dashboard-button--danger" : "");
+      itemButton.textContent = item.label;
+      itemButton.addEventListener("click", function () {
+        dropdown.hidden = true;
+        item.handler();
+      });
+      dropdown.appendChild(itemButton);
+    });
+
+    toggle.addEventListener("click", function (event) {
+      event.stopPropagation();
+      dropdown.hidden = !dropdown.hidden;
+    });
+
+    wrapper.appendChild(toggle);
+    wrapper.appendChild(dropdown);
+    return wrapper;
+  }
+
+  document.addEventListener("click", function () {
+    document.querySelectorAll(".dashboard-action-dropdown").forEach(function (menu) {
+      menu.hidden = true;
+    });
+  });
+  document.addEventListener("keydown", function (event) {
+    if (event.key === "Escape") {
+      document.querySelectorAll(".dashboard-action-dropdown").forEach(function (menu) {
+        menu.hidden = true;
+      });
+    }
+  });
+
   function renderRow(submission) {
     var tr = document.createElement("tr");
     if (submission.hidden) tr.className = "dashboard-row--hidden";
