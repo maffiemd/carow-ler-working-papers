@@ -22,7 +22,7 @@
 .dashboard-main {
   max-width: 1100px;
   margin: 0 auto;
-  padding: 2rem 1.5rem 4rem;
+  padding: 2rem 1.5rem 220px;
 }
 
 .dashboard-panel {
@@ -139,7 +139,20 @@ button.dashboard-button--secondary {
   border-radius: 8px;
 }
 
-.dashboard-table-wrap { overflow-x: auto; }
+/* No overflow-x here on purpose: per the CSS overflow spec, setting
+   overflow-x to anything but visible forces overflow-y to compute as
+   "auto" too (you can't have one axis visible and the other not),
+   which turns this wrapper into a vertical clipping/scroll container -
+   silently cutting off every row's Action dropdown (position: absolute,
+   anchored inside this wrapper) whenever it's taller than the wrapper's
+   own content, which is exactly the common case near the bottom of a
+   long table. Confirmed empirically: adding overflow-y: visible back
+   explicitly does NOT undo this, the spec coerces it back to auto
+   regardless. Table rows are short enough in practice that losing this
+   wrapper's own horizontal scroll isn't worth that tradeoff; a
+   genuinely too-wide table now scrolls the whole page instead. The
+   .dashboard-table-wrap class stays in dashboard.md as a layout hook,
+   it just has no rule here. */
 .dashboard-table {
   width: 100%;
   border-collapse: collapse;
