@@ -135,6 +135,10 @@ permalink: /dashboard/
     <label for="publish-wp">WP number</label>
     <input type="text" id="publish-wp" required placeholder="e.g. 2026-03">
 
+    <label for="publish-pdf-url">Published PDF link (Box)</label>
+    <input type="url" id="publish-pdf-url" required placeholder="https://cornell.app.box.com/s/...">
+    <p class="dashboard-hint">Use <strong>Build cover sheet</strong> first to get the cover-sheeted PDF emailed to you, upload it to the published-papers Box folder, set its sharing to "Anyone with the link can view," then paste that link here.</p>
+
     <label for="publish-message">Message to the author(s) (optional)</label>
     <textarea id="publish-message" rows="7" placeholder="Feedback or a personal note, e.g. what the reviewers liked or a request for a final check."></textarea>
     <p class="dashboard-hint">Shown in the acceptance email, under the congratulations. Leave blank to send the standard email. A blank line starts a new paragraph.</p>

@@ -79,6 +79,14 @@ alter table submissions add column if not exists rejection_letter text;
 -- falls back to manuscript_path only if it's unset.
 alter table submissions add column if not exists manuscript_box_url text;
 
+-- The final, cover-sheeted PDF now lives in Cornell Box once a paper is
+-- published - every link on the public site must point at Box, not this
+-- GitHub repo (Cornell IT requirement). Set by "Accept & Publish"'s
+-- "Published PDF link" field, which the editor fills in after uploading
+-- the cover-sheeted PDF emailed to them by "Build cover sheet". Distinct
+-- from manuscript_box_url, which is the pre-publication review copy.
+alter table submissions add column if not exists published_pdf_url text;
+
 alter table submissions enable row level security;
 
 drop policy if exists "editors can manage submissions" on submissions;

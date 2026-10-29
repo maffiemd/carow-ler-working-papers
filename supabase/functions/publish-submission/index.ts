@@ -7,12 +7,11 @@
 // goes through the `submissions`/`manuscripts` RLS policies in
 // supabase/schema.sql rather than bypassing them.
 //
-// This function does not publish anything itself - it computes a WP
-// number, creates a short-lived signed URL for the manuscript, and asks
-// GitHub (via repository_dispatch) to do the actual work. See
-// .github/workflows/publish-submission.yml and scripts/publish-submission.js,
-// which reuse the same generate-cover-sheet.js the manual CLI publish path
-// already relies on.
+// This function does not publish anything itself - it takes the Box link
+// to the already cover-sheeted PDF (built by the earlier "Build cover
+// sheet" step, see build-cover-sheet/index.ts) and asks GitHub (via
+// repository_dispatch) to write the public paper page. See
+// .github/workflows/publish-submission.yml and scripts/publish-submission.js.
 //
 // One-time setup: see "Editorial dashboard" in the README.
 
@@ -79,13 +78,18 @@ Deno.serve(async (req) => {
   }
 
   let submissionId: string | undefined;
+  let pdfBoxUrl: string | undefined;
   try {
-    ({ submission_id: submissionId } = await req.json());
+    ({ submission_id: submissionId, pdf_box_url: pdfBoxUrl } = await req.json());
   } catch {
     return response("Invalid JSON body", { status: 400 });
   }
   if (!submissionId) {
     return response("Missing submission_id", { status: 400 });
+  }
+  pdfBoxUrl = (pdfBoxUrl ?? "").trim();
+  if (!pdfBoxUrl) {
+    return response("Missing pdf_box_url - paste the Box link to the cover-sheeted PDF", { status: 400 });
   }
 
   const { data: submission, error: fetchError } = await supabase
@@ -96,30 +100,9 @@ Deno.serve(async (req) => {
   if (fetchError || !submission) {
     return response("Submission not found", { status: 404 });
   }
-  if (!submission.manuscript_box_url && !submission.manuscript_path) {
-    return response("Submission has no manuscript uploaded", { status: 400 });
-  }
 
   const wpNumber = submission.wp_number || (await nextWpNumber(supabase));
   const slug = `${wpNumber}-${slugify(submission.title)}`;
-
-  // The GitHub Action just curls this URL directly (see
-  // .github/workflows/publish-submission.yml), so a Box shared link works
-  // the same way a signed Storage URL did - it only needs to be a plain,
-  // unauthenticated, directly-downloadable link. Only a submission stored
-  // before the Box migration falls back to signing a Storage URL.
-  let manuscriptUrl: string;
-  if (submission.manuscript_box_url) {
-    manuscriptUrl = submission.manuscript_box_url;
-  } else {
-    const { data: signedUrlData, error: signedUrlError } = await supabase.storage
-      .from("manuscripts")
-      .createSignedUrl(submission.manuscript_path, 600);
-    if (signedUrlError || !signedUrlData) {
-      return response(`Failed to sign manuscript URL: ${signedUrlError?.message}`, { status: 500 });
-    }
-    manuscriptUrl = signedUrlData.signedUrl;
-  }
 
   const dispatchRes = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/dispatches`, {
     method: "POST",
@@ -138,7 +121,7 @@ Deno.serve(async (req) => {
         authors: submission.authors,
         abstract: submission.abstract ?? "",
         author_message: submission.author_message ?? "",
-        manuscript_url: manuscriptUrl,
+        pdf_box_url: pdfBoxUrl,
       },
     }),
   });
@@ -150,7 +133,12 @@ Deno.serve(async (req) => {
 
   await supabase
     .from("submissions")
-    .update({ wp_number: wpNumber, status: "accepted", updated_at: new Date().toISOString() })
+    .update({
+      wp_number: wpNumber,
+      status: "accepted",
+      published_pdf_url: pdfBoxUrl,
+      updated_at: new Date().toISOString(),
+    })
     .eq("id", submission.id);
 
   return response(JSON.stringify({ ok: true, wp_number: wpNumber }), {

@@ -212,9 +212,27 @@
   var publishModal = document.getElementById("publish-modal");
   var publishForm = document.getElementById("publish-form");
   var publishWpInput = document.getElementById("publish-wp");
+  var publishPdfUrlInput = document.getElementById("publish-pdf-url");
   var publishMessageInput = document.getElementById("publish-message");
   var publishStatus = document.getElementById("publish-status");
   var publishingSubmission = null;
+
+  async function buildCoverSheet(submission) {
+    if (!submission.manuscript_box_url && !submission.manuscript_path) {
+      alert("This submission has no manuscript file uploaded — cannot build a cover sheet.");
+      return;
+    }
+    if (!confirm('Email yourself the cover-sheeted PDF for "' + submission.title + '"?')) return;
+    var { error } = await supabase.functions.invoke("build-cover-sheet", {
+      body: { submission_id: submission.id },
+    });
+    if (error) {
+      alert("Couldn't build the cover sheet: " + (await functionErrorMessage(error)));
+      return;
+    }
+    alert('On its way — check your email for the cover-sheeted PDF, upload it to Box, then use "Accept & Publish" to finish.');
+    loadSubmissions();
+  }
 
   function openPublishModal(submission) {
     if (!submission.manuscript_box_url && !submission.manuscript_path) {
@@ -224,6 +242,7 @@
     publishingSubmission = submission;
     document.getElementById("publish-title").textContent = submission.title;
     publishWpInput.value = submission.wp_number || "";
+    publishPdfUrlInput.value = submission.published_pdf_url || "";
     publishMessageInput.value = submission.author_message || "";
     var emails = (submission.authors || [])
       .map(function (a) { return a.email; })
@@ -251,6 +270,7 @@
     publishStatus.textContent = "Publishing…";
 
     var wpNumber = publishWpInput.value.trim();
+    var pdfBoxUrl = publishPdfUrlInput.value.trim();
     var message = publishMessageInput.value.trim();
 
     var { error: updateError } = await supabase
@@ -258,6 +278,7 @@
       .update({
         status: "accepted",
         wp_number: wpNumber,
+        published_pdf_url: pdfBoxUrl,
         author_message: message || null,
         updated_at: new Date().toISOString(),
       })
@@ -269,7 +290,7 @@
     }
 
     var { error: fnError } = await supabase.functions.invoke("publish-submission", {
-      body: { submission_id: submission.id },
+      body: { submission_id: submission.id, pdf_box_url: pdfBoxUrl },
     });
     submitButton.disabled = false;
     if (fnError) {
@@ -484,7 +505,8 @@
     inviteBoardSubject.value = "Could you help review a submission to CAROW LER Working Papers?";
     inviteBoardBody.value =
       "Dear " + assigneeName + ",\n\n" +
-      "We've assigned \"" + submission.title + "\" to you and would appreciate your help reviewing it. The manuscript is attached.\n\n" +
+      "Recently, we received a submission to the CAROW LER Working Papers titled \"" + submission.title + "\". We believe this paper falls in your area of expertise and would appreciate your help reviewing it. The manuscript is attached.\n\n" +
+      "We are not looking for a full review, simply a rough evaluation to see if it meets the standards expected in the CAROW LER Working Papers.\n\n" +
       "Thank you,\nKourtney Koebel and Michael Maffie\nEditors, CAROW LER Working Papers";
     document.getElementById("invite-board-recipient").textContent = "Will email: " + assigneeName;
     inviteBoardStatus.textContent = "";
@@ -675,6 +697,7 @@
       publishedLabel.textContent = "Published (" + (submission.wp_number || "") + ")";
       actionsTd.appendChild(publishedLabel);
     } else {
+      menuItems.push({ label: "Build cover sheet", handler: function () { buildCoverSheet(submission); } });
       menuItems.push({ label: "Accept & Publish", handler: function () { openPublishModal(submission); } });
 
       if (submission.rejection_letter) {

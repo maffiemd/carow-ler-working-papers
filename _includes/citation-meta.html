@@ -6,7 +6,11 @@
 <meta name="citation_publication_date" content="{{ page.date | date: '%Y/%m/%d' }}">
 <meta name="citation_technical_report_institution" content="{{ site.carow.name }}, {{ site.carow.parent }}">
 <meta name="citation_technical_report_number" content="{{ page.wp_number | escape }}">
-{% if page.pdf_path %}<meta name="citation_pdf_url" content="{{ page.pdf_path | absolute_url }}">{% endif %}
+{% if page.pdf_path %}
+  {% assign citation_pdf_url = page.pdf_path %}
+  {% unless citation_pdf_url contains "://" %}{% assign citation_pdf_url = citation_pdf_url | absolute_url %}{% endunless %}
+<meta name="citation_pdf_url" content="{{ citation_pdf_url | escape }}">
+{% endif %}
 {% if page.doi %}<meta name="citation_doi" content="{{ page.doi | escape }}">{% endif %}
 {% for kw in page.keywords %}<meta name="citation_keywords" content="{{ kw | escape }}">{% endfor %}
 {% if page.abstract %}<meta name="description" content="{{ page.abstract | strip_html | truncate: 300 | escape }}">{% endif %}

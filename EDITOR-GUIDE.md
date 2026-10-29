@@ -16,21 +16,30 @@ Author emails manuscript
 Editor logs it in the dashboard (/dashboard/) and reviews it
         │
         ▼
-Editor clicks "Accept & Publish" (or runs the CLI script)
-        │          ──▶ commits + pushes _papers/*.md and pdfs/*.pdf
+Editor clicks "Build cover sheet"
+        │          ──▶ emails the editor the cover-sheeted PDF
+        ▼
+Editor uploads that PDF to the published-papers Box folder, copies the link
+        │
+        ▼
+Editor clicks "Accept & Publish", pastes the Box link
+        │          ──▶ commits + pushes _papers/*.md (no PDF file - it lives in Box)
         ▼
 GitHub Actions automatically:
   • rebuilds the site (pages.yml)
   • emails every mailing-list subscriber about the new paper (notify-subscribers.yml)
-  • (dashboard path only) emails the author(s) that their paper is live
+  • emails the author(s) that their paper is live
         │
         ▼
 Editor (optionally) posts a social announcement (see "Announcing on social media")
 ```
 
-Nothing after that push requires manual intervention. While testing any of this, turn on
-[staging mode](README.md#staging-mode) first so real subscribers/authors never see a test
-email — see "Testing before you publish for real" below.
+Every public link now has to point at Cornell Box, not this GitHub repo (a Cornell IT
+requirement), which is why publishing takes those two editor steps instead of one click —
+see "Publishing an accepted paper" below. Nothing after pasting the Box link requires
+manual intervention. While testing any of this, turn on [staging mode](README.md#staging-mode)
+first so real subscribers/authors never see a test email — see "Testing before you publish
+for real" below.
 
 ## Intake: logging a new submission
 
@@ -43,16 +52,28 @@ what happens once it's accepted.
 
 ## Publishing an accepted paper
 
-**If it's logged in the dashboard**: click **Accept & Publish** on the row. A dialog asks
-for the WP number and, optionally, a **message to the author(s)**: feedback or a personal
-note, which appears in their acceptance email under the congratulations (a blank line
-starts a new paragraph; leave it empty to send the standard email). The dialog also lists
-exactly which addresses will be emailed. Click **Publish & notify** and it builds the
-cover sheet, commits and pushes, and emails the author once it's live, automatically.
+**If it's logged in the dashboard**, publishing is two steps, because every link on the
+public site has to point at Cornell Box, not this GitHub repo:
+
+1. Click **Build cover sheet** on the row. This downloads the manuscript, merges the
+   CAROW cover sheet, and emails you the result as a PDF attachment — nothing is
+   committed or published yet.
+2. Upload that PDF to the series' published-papers Box folder, set its sharing to
+   "Anyone with the link can view," and copy the link.
+3. Click **Accept & Publish**. A dialog asks for the WP number, that **Published PDF
+   link** you just copied, and optionally a **message to the author(s)**: feedback or a
+   personal note, which appears in their acceptance email under the congratulations (a
+   blank line starts a new paragraph; leave it empty to send the standard email). The
+   dialog also lists exactly which addresses will be emailed. Click **Publish & notify**
+   and it writes the paper's page, commits and pushes, and emails the author once it's
+   live, automatically.
+
 Skip to "Mint a DOI" below once it's done.
 
-**Otherwise** (or if you'd rather drive it from the terminal), use the CLI path — it does
-the exact same thing under the hood:
+**Otherwise** (or if you'd rather drive it from the terminal), use the CLI path — it
+builds the same cover sheet, but still commits the finished PDF to this repo under
+`pdfs/` rather than Box, so only use it for a paper that doesn't need to satisfy the
+Box-only requirement above:
 
 1. **Copy the template**:
    ```bash
@@ -95,7 +116,7 @@ the exact same thing under the hood:
    [Zenodo](https://zenodo.org) and add the DOI to the paper's front matter in a
    follow-up commit.
 
-That's it — the CLI path is just those steps; the dashboard path is one click.
+That's it — the CLI path is just those steps; the dashboard path is the two clicks above.
 
 ## Testing before you publish for real
 
@@ -162,8 +183,9 @@ after the first person anywhere has posted it) — just try again a few seconds 
 ## The editorial dashboard
 
 **[workingpapers.ilr.cornell.edu/dashboard/](https://workingpapers.ilr.cornell.edu/dashboard/)**
-— sign-in, a submissions table, and an "Accept & Publish" button that does the equivalent
-of the CLI steps above automatically and emails the author directly once it's live.
+— sign-in, a submissions table, and "Build cover sheet" / "Accept & Publish" buttons that
+do the equivalent of the CLI steps above and email the author directly once it's live —
+see "Publishing an accepted paper" above for the two-step flow.
 
 **Signing in for the first time**: you'll get an invite email with a 6-digit code, not a
 clickable link — many institutional email systems (Cornell's and UofT's included)
@@ -193,7 +215,9 @@ and **Unhide** them. Use this for decluttering or when an author withdraws a pap
 If an author wants their paper actually gone, hide it first, then use **Delete
 permanently** on the hidden row, which removes the record and its manuscript file for
 good. Deleting a published paper here does not take it off the live site; that means
-removing its `_papers/` and `pdfs/` files from the repo.
+removing its `_papers/<slug>.md` file from the repo (and, for a paper published before
+the Box migration, its `pdfs/<slug>.pdf` too) — the PDF itself, for anything published
+since, lives in Box and needs removing there separately if it should come down too.
 
 The CLI workflow still works too, for anything logged outside the dashboard.
 

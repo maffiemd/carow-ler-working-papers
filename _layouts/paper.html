@@ -33,8 +33,17 @@ layout: default
   {% endif %}
 
   {% if page.pdf_path %}
+  {% comment %}
+    pdf_path is either a full Box URL (papers published after the move off
+    GitHub-hosted PDFs - every public link now has to point at Box, not
+    this repo) or a repo-relative path (papers published before it, still
+    served from pdfs/). relative_url would mangle an absolute URL, so only
+    run it through that filter when it isn't already one.
+  {% endcomment %}
+  {% assign pdf_url = page.pdf_path %}
+  {% unless pdf_url contains "://" %}{% assign pdf_url = pdf_url | relative_url %}{% endunless %}
   <p class="paper__download">
-    <a class="button" href="{{ page.pdf_path | relative_url }}">Download PDF</a>
+    <a class="button" href="{{ pdf_url | escape }}">Download PDF</a>
   </p>
   {% endif %}
 

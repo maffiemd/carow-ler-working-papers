@@ -43,6 +43,11 @@ Team manages the `workingpapers` CNAME pointing at `maffiemd.github.io`).
 
 Manuscripts must already be PDFs — there's no auto-conversion from Word/other formats.
 
+**Note:** this CLI path still commits the finished PDF under `pdfs/` in this repo — it
+predates, and hasn't been updated for, the Box-only requirement described in "Publishing:
+the two-step flow" under "Editorial dashboard" below. Prefer the dashboard for any paper
+that needs its PDF link to point at Box instead of GitHub.
+
 ## Structure
 
 - `_papers/` — one Markdown file per paper (front matter only; the PDF is the actual paper)
@@ -160,15 +165,31 @@ submissions from intake through publication, and publish accepted papers with on
   users only. Manuscripts live in Cornell Box, not Supabase Storage — the table stores a
   `manuscript_box_url` (the editor pastes it in; see "Box setup" below). The old
   `manuscripts` Storage bucket and `manuscript_path` column still exist for submissions
-  stored before this migration; new submissions don't use them.
+  stored before this migration; new submissions don't use them. `published_pdf_url`
+  stores the Box link to the final, cover-sheeted PDF once a paper is published — see
+  "Publishing: the two-step flow" below.
 - **Intake**: authors submit via a Box File Request form linked from the Submit page —
   editors still add each submission to the dashboard by hand (there's no automatic sync
   from the Box form into `submissions`), but no longer need to re-upload the file anywhere.
-- **Publishing**: clicking "Accept & Publish" calls the `publish-submission` Edge Function,
-  which asks GitHub (via `repository_dispatch`) to build the cover sheet and publish — reusing
-  the exact same `scripts/generate-cover-sheet.js` the manual CLI publish path
-  (`scripts/publish-paper.js`) already relies on — then emails the author(s) directly once
-  it's live. See `.github/workflows/publish-submission.yml`.
+- **Publishing: the two-step flow** — Cornell IT requires that every link on the public
+  site point at Cornell Box, not this GitHub repo, so the published PDF can no longer be
+  committed here the way `scripts/publish-paper.js` still does. Instead:
+  1. **Build cover sheet** calls the `build-cover-sheet` Edge Function, which asks GitHub
+     (via `repository_dispatch`) to download the manuscript, merge the CAROW cover sheet
+     (reusing `scripts/generate-cover-sheet.js`), and email the result to the signed-in
+     editor as a PDF attachment. See `.github/workflows/build-cover-sheet.yml` and
+     `scripts/send-cover-sheet.js`.
+  2. The editor uploads that PDF to the series' published-papers Box folder, sets its
+     sharing to "Anyone with the link can view," and pastes the resulting link into
+     **Accept & Publish**'s "Published PDF link" field.
+  3. Submitting that modal calls the `publish-submission` Edge Function, which asks
+     GitHub to write `_papers/<slug>.md` with `pdf_path` set to that Box link — no PDF
+     file is ever committed — then emails the author(s) directly once it's live. See
+     `.github/workflows/publish-submission.yml` and `scripts/publish-submission.js`.
+  Papers published before this change keep their PDFs under `pdfs/` in this repo;
+  `_layouts/paper.html` and `_includes/citation-meta.html` treat `pdf_path` as a Box URL
+  when it looks like one (`contains "://"`) and as a repo-relative path otherwise, so both
+  kinds of paper keep working.
 
 ### One-time setup
 
@@ -194,6 +215,11 @@ the mailing-list schema) in the Supabase SQL Editor, same as the original setup.
   publish pipeline (`publish-submission` Edge Function → GitHub Action) `curl`s this link
   directly to download the PDF, so it must work for an unauthenticated, non-interactive
   request, not just a signed-in browser.
+- Also keep a separate **published-papers** Box folder (outside `Incoming/`), with sharing
+  enabled the same way. After "Build cover sheet" emails an editor the cover-sheeted PDF,
+  they upload it here, grab its shared link, and paste that into "Accept & Publish" — this
+  is what `pdf_path` points at on the live site, so set its sharing to "Anyone with the
+  link can view" the same way as a manuscript's.
 
 **3. Configure Auth email delivery** — Supabase's defaults don't work well for this:
 
@@ -248,6 +274,7 @@ at [github.com/settings/tokens](https://github.com/settings/tokens):
 
 **6. Deploy the Edge Functions**:
 ```bash
+supabase functions deploy build-cover-sheet
 supabase functions deploy publish-submission
 supabase functions deploy reject-submission
 supabase functions deploy email-authors
@@ -255,6 +282,7 @@ supabase functions deploy invite-board-member
 ```
 (No `--no-verify-jwt` on any of these, unlike `notify-owner` — they *should* require a
 valid signed-in session, since the dashboard calls them on the editor's behalf.
+`build-cover-sheet` is step 1 of publishing (see "Publishing: the two-step flow" above);
 `reject-submission` sends the "Reject & notify" letter, `email-authors` sends the
 "Email authors" message (same letter layout, but doesn't touch the submission's status),
 and `invite-board-member` sends the "ask a board member to help review" message with the
