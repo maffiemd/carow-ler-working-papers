@@ -45,10 +45,27 @@ async function main() {
   const config = yaml.load(fs.readFileSync(path.join(REPO_ROOT, "_config.yml"), "utf8"));
   const pdfPath = `/pdfs/${slug}.pdf`;
 
+  // jekyll-seo-tag (third-party gem) auto-generates <meta name="author">
+  // from page.author, falling back to page.authors[0] - and renders
+  // either with NO HTML-escaping, unlike our own templates. Setting
+  // page.author explicitly here (checked first in its resolution order)
+  // keeps it from ever falling back to the unescaped authors[0] path.
+  // Stripping just the characters that matter for breaking out of an
+  // HTML attribute (" < >) is enough to make it safe for that one
+  // third-party-rendered tag; the full, unstripped names are still used
+  // everywhere else (paper.html, citation-meta.html), which escape
+  // correctly on their own.
+  const authorMeta = authors
+    .map((a) => a.name)
+    .filter(Boolean)
+    .join(", ")
+    .replace(/["<>]/g, "");
+
   const frontMatter = {
     wp_number: wpNumber,
     title,
     date: new Date().toISOString().slice(0, 10),
+    author: authorMeta,
     authors,
     status: "working",
     abstract,
