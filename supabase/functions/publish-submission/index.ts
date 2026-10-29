@@ -96,18 +96,29 @@ Deno.serve(async (req) => {
   if (fetchError || !submission) {
     return response("Submission not found", { status: 404 });
   }
-  if (!submission.manuscript_path) {
+  if (!submission.manuscript_box_url && !submission.manuscript_path) {
     return response("Submission has no manuscript uploaded", { status: 400 });
   }
 
   const wpNumber = submission.wp_number || (await nextWpNumber(supabase));
   const slug = `${wpNumber}-${slugify(submission.title)}`;
 
-  const { data: signedUrlData, error: signedUrlError } = await supabase.storage
-    .from("manuscripts")
-    .createSignedUrl(submission.manuscript_path, 600);
-  if (signedUrlError || !signedUrlData) {
-    return response(`Failed to sign manuscript URL: ${signedUrlError?.message}`, { status: 500 });
+  // The GitHub Action just curls this URL directly (see
+  // .github/workflows/publish-submission.yml), so a Box shared link works
+  // the same way a signed Storage URL did - it only needs to be a plain,
+  // unauthenticated, directly-downloadable link. Only a submission stored
+  // before the Box migration falls back to signing a Storage URL.
+  let manuscriptUrl: string;
+  if (submission.manuscript_box_url) {
+    manuscriptUrl = submission.manuscript_box_url;
+  } else {
+    const { data: signedUrlData, error: signedUrlError } = await supabase.storage
+      .from("manuscripts")
+      .createSignedUrl(submission.manuscript_path, 600);
+    if (signedUrlError || !signedUrlData) {
+      return response(`Failed to sign manuscript URL: ${signedUrlError?.message}`, { status: 500 });
+    }
+    manuscriptUrl = signedUrlData.signedUrl;
   }
 
   const dispatchRes = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/dispatches`, {
@@ -127,7 +138,7 @@ Deno.serve(async (req) => {
         authors: submission.authors,
         abstract: submission.abstract ?? "",
         author_message: submission.author_message ?? "",
-        manuscript_url: signedUrlData.signedUrl,
+        manuscript_url: manuscriptUrl,
       },
     }),
   });

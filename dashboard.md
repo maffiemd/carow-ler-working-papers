@@ -95,9 +95,10 @@ permalink: /dashboard/
     <label for="add-received">Date received</label>
     <input type="date" id="add-received" required>
 
-    <label for="add-manuscript">Manuscript (PDF)</label>
-    <input type="file" id="add-manuscript" accept="application/pdf" required>
-    <p id="add-manuscript-hint" class="dashboard-hint" hidden>Leave empty to keep the current file. Choosing a new one replaces it.</p>
+    <label for="add-manuscript">Manuscript link (Box)</label>
+    <input type="url" id="add-manuscript" placeholder="https://cornell.app.box.com/s/..." required>
+    <p class="dashboard-hint">Paste the manuscript's Box shared link (not the submission-form link) — set its sharing to "Anyone with the link can view" first, since the publish pipeline and some emails use this link directly.</p>
+    <p id="add-manuscript-hint" class="dashboard-hint" hidden>Leave empty to keep the current link. Paste a new one to replace it.</p>
     <p id="add-published-hint" class="dashboard-hint" hidden>This paper is already published. Edits here change the dashboard record only, not the live paper page or PDF.</p>
 
     <div class="dashboard-form__actions">

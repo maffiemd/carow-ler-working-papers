@@ -156,10 +156,14 @@ submissions from intake through publication, and publish accepted papers with on
 
 - **Auth**: Supabase Auth, invite-only. Only the two series editors have accounts; public
   sign-up is never enabled.
-- **Data**: a `submissions` table and a private `manuscripts` Storage bucket (see
-  `supabase/schema.sql`), both restricted to authenticated users only.
-- **Intake is manual**: editors add each submission by hand (authors keep emailing the PDF
-  per the Submit page) — there's no public upload form.
+- **Data**: a `submissions` table (see `supabase/schema.sql`), restricted to authenticated
+  users only. Manuscripts live in Cornell Box, not Supabase Storage — the table stores a
+  `manuscript_box_url` (the editor pastes it in; see "Box setup" below). The old
+  `manuscripts` Storage bucket and `manuscript_path` column still exist for submissions
+  stored before this migration; new submissions don't use them.
+- **Intake**: authors submit via a Box File Request form linked from the Submit page —
+  editors still add each submission to the dashboard by hand (there's no automatic sync
+  from the Box form into `submissions`), but no longer need to re-upload the file anywhere.
 - **Publishing**: clicking "Accept & Publish" calls the `publish-submission` Edge Function,
   which asks GitHub (via `repository_dispatch`) to build the cover sheet and publish — reusing
   the exact same `scripts/generate-cover-sheet.js` the manual CLI publish path
@@ -172,7 +176,26 @@ submissions from intake through publication, and publish accepted papers with on
 `manuscripts` bucket from [`supabase/schema.sql`](supabase/schema.sql) (the block added after
 the mailing-list schema) in the Supabase SQL Editor, same as the original setup.
 
-**2. Configure Auth email delivery** — Supabase's defaults don't work well for this:
+**2. Box setup** — manuscripts live in Cornell Box (box.cornell.edu), not Supabase Storage:
+
+- Create a `CAROW Submissions/Incoming/` folder structure. Add the other editor as a
+  Collaborator (Editor access) on the top-level folder — their non-Cornell email works for
+  this even though collaborator invites are separate from link-sharing.
+- Create a **File Request** on the `Incoming/` subfolder (right-click it → Request Files).
+  Add required custom fields for author name, email, affiliation, and paper title, restrict
+  file types to PDF, and set access to allow submissions from anyone with the link (not
+  Cornell-only — submissions aren't limited to Cornell/UofT affiliates). Link this URL from
+  `submit.md`'s "How to submit" section.
+- When a new file arrives in `Incoming/`, move it into a dated subfolder, then get its own
+  Box **shared link** (Share → Link settings → set "Anyone with the link can view," and
+  confirm it's downloadable, not just previewable) — this is the link that goes into the
+  dashboard's "Manuscript link" field. **This is a different link from the File Request URL
+  above** — the File Request link is just the intake form; the shared link is per-file. The
+  publish pipeline (`publish-submission` Edge Function → GitHub Action) `curl`s this link
+  directly to download the PDF, so it must work for an unauthenticated, non-interactive
+  request, not just a signed-in browser.
+
+**3. Configure Auth email delivery** — Supabase's defaults don't work well for this:
 
 - **Site URL**: Authentication → URL Configuration → set **Site URL** to
   `https://workingpapers.ilr.cornell.edu` (it defaults to `localhost:3000`, which breaks
@@ -191,7 +214,7 @@ the mailing-list schema) in the Supabase SQL Editor, same as the original setup.
   auto-consumed that way. The dashboard's sign-in page has a "Have an invite code
   instead?" form that calls `verifyOtp()` with it (see `assets/js/dashboard.js`).
 
-**3. Invite the editors** — run once per editor, using the service_role key (Project Settings
+**4. Invite the editors** — run once per editor, using the service_role key (Project Settings
 → API):
 ```bash
 SUPABASE_URL=https://gfiqcuznnmzpvnpynbxj.supabase.co \
@@ -205,7 +228,7 @@ Authentication → Users), use `scripts/reinvite-editors.js` instead — same us
 first deletes the stuck account so a fresh invite can be sent (plain `invite-editors.js`
 refuses to resend to an already-registered email).
 
-**4. GitHub Personal Access Token** — needed in *two* places, same token works for both
+**5. GitHub Personal Access Token** — needed in *two* places, same token works for both
 (classic PAT with `repo` scope, or fine-grained with Contents: Read and write). Create one
 at [github.com/settings/tokens](https://github.com/settings/tokens):
 
@@ -223,7 +246,7 @@ at [github.com/settings/tokens](https://github.com/settings/tokens):
   variables → Actions → New repository secret** on GitHub (or `gh secret set
   WORKFLOW_GITHUB_PAT` in your own terminal — not here).
 
-**5. Deploy the Edge Functions**:
+**6. Deploy the Edge Functions**:
 ```bash
 supabase functions deploy publish-submission
 supabase functions deploy reject-submission
@@ -302,8 +325,10 @@ Scaffolded; not yet publicly launched. Outstanding before launch:
       `GITHUB_PAT` Edge Function secret, and deploy `publish-submission` — the editorial
       dashboard is live at `/dashboard/`
 - [ ] Set the `WORKFLOW_GITHUB_PAT` GitHub Actions repo secret (see "Editorial dashboard"
-      setup, step 4) — without it, "Accept & Publish" commits the paper but silently never
+      setup, step 5) — without it, "Accept & Publish" commits the paper but silently never
       rebuilds the site or notifies the mailing list
+- [ ] Set up the Cornell Box folder, File Request link, and collaborator access (see
+      "Editorial dashboard" setup, step 2), and link the File Request from `submit.md`
 - [x] Change `FROM_EMAIL` off the placeholder `grievances@michaelmaffie.com` sender —
       now `CAROW@michaelmaffie.com`, matching the Supabase Auth custom SMTP sender
 - [ ] Register with RePEc; consider SSRN mirroring

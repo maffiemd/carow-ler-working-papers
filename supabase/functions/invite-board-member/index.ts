@@ -94,7 +94,7 @@ Deno.serve(async (req) => {
 
   const { data: submission, error: fetchError } = await supabase
     .from("submissions")
-    .select("id, title, manuscript_path")
+    .select("id, title, manuscript_path, manuscript_box_url")
     .eq("id", payload.submission_id)
     .single();
   if (fetchError || !submission) return response("Submission not found", { status: 404 });
@@ -128,8 +128,16 @@ Deno.serve(async (req) => {
     }
   }
 
+  // Manuscripts now live in Box: link to it rather than attaching, so a
+  // large PDF never risks hitting Resend's attachment size limit. Only a
+  // submission stored before the Box migration (manuscript_path set,
+  // manuscript_box_url unset) still gets the old download-and-attach
+  // treatment.
   const attachments: { filename: string; content: string }[] = [];
-  if (submission.manuscript_path) {
+  let finalBody = body;
+  if (submission.manuscript_box_url) {
+    finalBody = `${body}\n\nManuscript: ${submission.manuscript_box_url}`;
+  } else if (submission.manuscript_path) {
     const { data: fileBlob, error: downloadError } = await supabase.storage
       .from("manuscripts")
       .download(submission.manuscript_path);
@@ -153,8 +161,8 @@ Deno.serve(async (req) => {
       from: Deno.env.get("NOTIFY_FROM_EMAIL"),
       to,
       subject: finalSubject,
-      html: renderLetterHtml({ title: submission.title, body, siteUrl, seriesName: SERIES_NAME }),
-      text: body,
+      html: renderLetterHtml({ title: submission.title, body: finalBody, siteUrl, seriesName: SERIES_NAME }),
+      text: finalBody,
       ...(replyTo.length > 0 ? { reply_to: replyTo } : {}),
       ...(attachments.length > 0 ? { attachments } : {}),
     }),

@@ -33,6 +33,8 @@ ahead of formal journal submission. Typical turnaround is _TBD_.
 
 ## How to submit
 
-Email your PDF and a short cover note to the series editors,
+Submit your PDF through our [Box submission form](https://cornell.app.box.com/f/793bb2a75966443f9587c0fb45bae939),
+including your name, affiliation, email, and paper title. If you have questions
+or a short cover note you'd like to add, email the series editors,
 {% for person in site.editors %}{{ person.name }}{% unless forloop.last %} and {% endunless %}{% endfor %},
 at **{{ site.contact_email }}**.
