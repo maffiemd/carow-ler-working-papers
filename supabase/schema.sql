@@ -71,6 +71,14 @@ alter table submissions add column if not exists hidden boolean not null default
 alter table submissions add column if not exists author_message text;
 alter table submissions add column if not exists rejection_letter text;
 
+-- Manuscripts now live in Cornell Box (a shared link pasted in by the
+-- editor), not Supabase Storage - see the dashboard's "Manuscript link"
+-- field. manuscript_path is kept, not dropped, so already-stored
+-- submissions keep working off the old Storage bucket; every code path
+-- that reads a manuscript location checks manuscript_box_url first and
+-- falls back to manuscript_path only if it's unset.
+alter table submissions add column if not exists manuscript_box_url text;
+
 alter table submissions enable row level security;
 
 drop policy if exists "editors can manage submissions" on submissions;

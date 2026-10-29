@@ -132,6 +132,7 @@
     document.getElementById("add-abstract").value = submission.abstract || "";
     assignedSelect.value = submission.assigned_to || "";
     receivedInput.value = submission.received_date || "";
+    manuscriptInput.value = submission.manuscript_box_url || "";
     manuscriptInput.required = false;
     manuscriptHint.hidden = false;
     publishedHint.hidden = submission.status !== "published";
@@ -181,8 +182,14 @@
     }).join("");
   }
 
-  async function downloadManuscript(path) {
-    var { data, error } = await supabase.storage.from("manuscripts").createSignedUrl(path, 300);
+  async function downloadManuscript(submission) {
+    if (submission.manuscript_box_url) {
+      window.open(submission.manuscript_box_url, "_blank");
+      return;
+    }
+    // Legacy fallback: a submission stored before the Box migration, still
+    // pointing at a Supabase Storage object.
+    var { data, error } = await supabase.storage.from("manuscripts").createSignedUrl(submission.manuscript_path, 300);
     if (error || !data) {
       alert("Couldn't create a download link: " + (error ? error.message : "unknown error"));
       return;
@@ -210,7 +217,7 @@
   var publishingSubmission = null;
 
   function openPublishModal(submission) {
-    if (!submission.manuscript_path) {
+    if (!submission.manuscript_box_url && !submission.manuscript_path) {
       alert("This submission has no manuscript file uploaded — cannot publish.");
       return;
     }
@@ -660,8 +667,8 @@
 
     var actionsTd = document.createElement("td");
     var menuItems = [];
-    if (submission.manuscript_path) {
-      menuItems.push({ label: "Download manuscript", handler: function () { downloadManuscript(submission.manuscript_path); } });
+    if (submission.manuscript_box_url || submission.manuscript_path) {
+      menuItems.push({ label: "Download manuscript", handler: function () { downloadManuscript(submission); } });
     }
     if (submission.status === "published") {
       var publishedLabel = document.createElement("div");
@@ -887,7 +894,7 @@
     var abstract = document.getElementById("add-abstract").value.trim();
     var assignedTo = assignedSelect.value;
     var receivedDate = receivedInput.value;
-    var file = manuscriptInput.files[0];
+    var boxUrl = manuscriptInput.value.trim();
     var editing = editingSubmission;
 
     if (!authors.length) {
@@ -896,24 +903,10 @@
       return;
     }
 
-    if (!file && !editing) {
-      addStatus.textContent = "Please attach a manuscript PDF.";
+    if (!boxUrl && !editing) {
+      addStatus.textContent = "Please paste the manuscript's Box link.";
       submitButton.disabled = false;
       return;
-    }
-
-    var path = editing ? editing.manuscript_path : null;
-    var uploadedNewFile = false;
-    if (file) {
-      var newPath = Date.now() + "-" + file.name.replace(/[^a-zA-Z0-9.\-]/g, "_");
-      var { error: uploadError } = await supabase.storage.from("manuscripts").upload(newPath, file);
-      if (uploadError) {
-        addStatus.textContent = "Upload failed: " + uploadError.message;
-        submitButton.disabled = false;
-        return;
-      }
-      path = newPath;
-      uploadedNewFile = true;
     }
 
     var fields = {
@@ -922,7 +915,7 @@
       abstract: abstract,
       assigned_to: assignedTo,
       received_date: receivedDate,
-      manuscript_path: path,
+      manuscript_box_url: boxUrl || (editing ? editing.manuscript_box_url : null),
     };
 
     var saveError;
@@ -935,17 +928,8 @@
 
     submitButton.disabled = false;
     if (saveError) {
-      if (uploadedNewFile) {
-        await supabase.storage.from("manuscripts").remove([path]);
-      }
       addStatus.textContent = "Couldn't save: " + saveError.message;
       return;
-    }
-
-    // The old manuscript is only removed once the new record is safely saved,
-    // so a failed save never leaves the submission pointing at a deleted file.
-    if (editing && uploadedNewFile && editing.manuscript_path) {
-      await supabase.storage.from("manuscripts").remove([editing.manuscript_path]);
     }
 
     resetAddForm();
