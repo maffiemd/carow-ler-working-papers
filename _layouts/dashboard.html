@@ -12,7 +12,10 @@
 <body class="dashboard-body">
   <header class="dashboard-header">
     <a class="dashboard-header__brand" href="{{ '/' | relative_url }}">{{ site.short_title }} &middot; Editorial Dashboard</a>
-    <button type="button" id="dashboard-sign-out" class="dashboard-header__sign-out" hidden>Sign out</button>
+    <div class="dashboard-header__actions">
+      <a class="dashboard-header__home" href="{{ '/' | relative_url }}">&larr; Back to main site</a>
+      <button type="button" id="dashboard-sign-out" class="dashboard-header__sign-out" hidden>Sign out</button>
+    </div>
   </header>
   <main class="dashboard-main">
     {{ content }}
