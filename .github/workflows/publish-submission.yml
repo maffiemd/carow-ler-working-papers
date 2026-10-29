@@ -33,7 +33,9 @@ jobs:
         run: npm install
 
       - name: Download manuscript
-        run: curl -sL --fail "${{ github.event.client_payload.manuscript_url }}" -o /tmp/manuscript.pdf
+        run: curl -sL --fail "$MANUSCRIPT_URL" -o /tmp/manuscript.pdf
+        env:
+          MANUSCRIPT_URL: ${{ github.event.client_payload.manuscript_url }}
 
       - name: Build front matter and cover sheet
         run: node scripts/publish-submission.js
@@ -45,12 +47,23 @@ jobs:
           ABSTRACT: ${{ github.event.client_payload.abstract }}
           MANUSCRIPT_PATH: /tmp/manuscript.pdf
 
+      # title/wp_number/slug ultimately trace back to a paper title an
+      # anonymous author can set via the Box submission form, so they're
+      # untrusted. ${{ }} is substituted as raw text before the shell
+      # parses this script (GitHub's documented script-injection
+      # footgun) - passing them through env: and referencing them as
+      # shell variables instead means the shell only ever sees them as
+      # data, never as script to parse.
       - name: Commit and push
+        env:
+          SLUG: ${{ github.event.client_payload.slug }}
+          TITLE: ${{ github.event.client_payload.title }}
+          WP_NUMBER: ${{ github.event.client_payload.wp_number }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add "_papers/${{ github.event.client_payload.slug }}.md" "pdfs/${{ github.event.client_payload.slug }}.pdf"
-          git commit -m "Publish working paper: ${{ github.event.client_payload.title }} (${{ github.event.client_payload.wp_number }})"
+          git add "_papers/$SLUG.md" "pdfs/$SLUG.pdf"
+          git commit -m "Publish working paper: $TITLE ($WP_NUMBER)"
           git push
 
       - name: Notify author(s)
@@ -69,8 +82,10 @@ jobs:
           AUTHOR_MESSAGE: ${{ github.event.client_payload.author_message }}
 
       - name: Mark submission published in Supabase
+        env:
+          SUBMISSION_ID: ${{ github.event.client_payload.submission_id }}
         run: |
-          curl -sf -X PATCH "${{ secrets.SUPABASE_URL }}/rest/v1/submissions?id=eq.${{ github.event.client_payload.submission_id }}" \
+          curl -sf -X PATCH "${{ secrets.SUPABASE_URL }}/rest/v1/submissions?id=eq.$SUBMISSION_ID" \
             -H "apikey: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
             -H "Authorization: Bearer ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
             -H "Content-Type: application/json" \
