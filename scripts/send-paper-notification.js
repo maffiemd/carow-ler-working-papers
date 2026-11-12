@@ -14,6 +14,9 @@
 //   SITE_URL                    e.g. "https://workingpapers.ilr.cornell.edu"
 // Optional:
 //   TEST_EMAIL                  if set, sends only to this address instead of querying Supabase
+//   RECIPIENT_EMAILS            comma-separated subscriber addresses to limit the real send to
+//                                (e.g. re-sending to a few people added after the original send) -
+//                                ignored if TEST_EMAIL is set; each must already be subscribed
 //   REPLY_TO                    address(es) replies should go to, comma-separated for several (the sending domain can't receive mail)
 //   SERIES_PREFIX                e.g. "CAROW-LER-WP" (used in the subject line); falls back to wp_number alone
 
@@ -113,6 +116,27 @@ async function getRecipients(supabase) {
   if (testEmail) {
     console.log(`TEST_EMAIL set - sending only to ${testEmail}`);
     return [{ email: testEmail, unsubscribe_token: "test" }];
+  }
+
+  // For re-sending to a specific handful of already-subscribed people (e.g.
+  // board members added after the original send) without re-notifying
+  // everyone else. Looked up for real, unlike TEST_EMAIL, so they get their
+  // real unsubscribe_token rather than a non-functional placeholder.
+  const recipientEmails = (process.env.RECIPIENT_EMAILS || "")
+    .split(",")
+    .map((email) => email.trim())
+    .filter(Boolean);
+  if (recipientEmails.length > 0) {
+    console.log(`RECIPIENT_EMAILS set - sending only to ${recipientEmails.join(", ")}`);
+    const { data, error } = await supabase
+      .from("subscribers")
+      .select("email, unsubscribe_token")
+      .eq("subscribed", true)
+      .in("email", recipientEmails);
+    if (error) {
+      throw new Error(`Failed to fetch recipients from Supabase: ${error.message}`);
+    }
+    return data;
   }
 
   const { data, error } = await supabase

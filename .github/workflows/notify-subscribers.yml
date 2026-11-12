@@ -13,6 +13,9 @@ on:
       test_email:
         description: "If set, sends only to this address instead of every subscriber"
         required: false
+      recipient_emails:
+        description: "Comma-separated subscriber addresses to limit a real send to (e.g. re-sending to people added after the original send) - ignored if test_email is set"
+        required: false
 
 jobs:
   send:
@@ -60,3 +63,4 @@ jobs:
           # instead of the real subscriber list. Leave STAGING_EMAIL unset for a real
           # launch - see "Staging mode" in the README.
           TEST_EMAIL: ${{ inputs.test_email || vars.STAGING_EMAIL }}
+          RECIPIENT_EMAILS: ${{ inputs.recipient_emails }}
