@@ -62,7 +62,10 @@ function escapeHtml(text) {
 }
 
 function authorNames(authors) {
-  return (authors || []).map((author) => author.name).join(", ");
+  // Mirrors generate-cover-sheet.js's author-line formatting.
+  return (authors || [])
+    .map((author) => (author.affiliation ? `${author.name} (${author.affiliation})` : author.name))
+    .join(", ");
 }
 
 function renderEmailText({ wpLabel, title, authorLine, abstract, paperLink, pdfLink, unsubscribeLink }) {
