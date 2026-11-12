@@ -135,7 +135,12 @@ async function sendPaper(paperFilePath, recipients, { resend, siteUrl, seriesPre
 
   const urlPath = paperUrlPath(paperFilePath);
   const paperLink = siteUrl + urlPath;
-  const pdfLink = frontMatter.pdf_path ? siteUrl.replace(/\/$/, "") + frontMatter.pdf_path : null;
+  // pdf_path is an absolute Cornell Box URL for anything published since the
+  // Box migration, and only a repo-relative path (needing siteUrl prepended)
+  // for papers published before it - mirrors the same check in
+  // _layouts/paper.html and _includes/citation-meta.html.
+  const pdfPath = frontMatter.pdf_path || "";
+  const pdfLink = pdfPath ? (pdfPath.includes("://") ? pdfPath : siteUrl + pdfPath) : null;
 
   const subject = `New working paper: ${title}`;
 
