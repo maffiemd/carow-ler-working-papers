@@ -21,6 +21,10 @@ const { PDFDocument, StandardFonts, rgb } = require("pdf-lib");
 
 const REPO_ROOT = path.join(__dirname, "..");
 const LOGO_PATH = path.join(__dirname, "assets", "carow-logo-print.png");
+// Optional: the co-host's logo lockup, drawn right-aligned next to the CAROW
+// logo if present. Not committed yet - falls back to just the CAROW logo
+// until a print-quality file is added here.
+const CO_HOST_LOGO_PATH = path.join(__dirname, "assets", "cirhr-logo-print.png");
 
 const PAGE_WIDTH = 612; // US Letter
 const PAGE_HEIGHT = 792;
@@ -29,11 +33,9 @@ const CONTENT_WIDTH = PAGE_WIDTH - MARGIN * 2;
 
 // Mirrors assets/css/main.css's palette.
 const RED = rgb(0xb3 / 255, 0x1b / 255, 0x1b / 255);
-const RED_DARK = rgb(0x8c / 255, 0x15 / 255, 0x15 / 255);
 const INK = rgb(0x22 / 255, 0x22 / 255, 0x22 / 255);
 const MUTED = rgb(0x5b / 255, 0x5b / 255, 0x5b / 255);
-const BG_ALT = rgb(0xf7 / 255, 0xf5 / 255, 0xf2 / 255);
-const BORDER = rgb(0xe0 / 255, 0xe0 / 255, 0xe0 / 255);
+const WHITE = rgb(1, 1, 1);
 
 function wrapText(font, text, size, maxWidth) {
   const words = text.split(/\s+/).filter(Boolean);
@@ -50,6 +52,15 @@ function wrapText(font, text, size, maxWidth) {
   }
   if (current) lines.push(current);
   return lines;
+}
+
+// Draws text with extra letter-spacing (pdf-lib has no native tracking support).
+function drawTrackedText(page, text, { x, y, size, font, color, tracking = 0 }) {
+  let cursor = x;
+  for (const ch of text) {
+    page.drawText(ch, { x: cursor, y, size, font, color });
+    cursor += font.widthOfTextAtSize(ch, size) + tracking;
+  }
 }
 
 function loadSeriesConfig() {
@@ -69,33 +80,49 @@ async function buildCoverPageBytes({ title, authors, wpLabel, dateText, shortTit
   const page = pdfDoc.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
 
   const timesBold = await pdfDoc.embedFont(StandardFonts.TimesRomanBold);
-  const timesBoldItalic = await pdfDoc.embedFont(StandardFonts.TimesRomanBoldItalic);
   const helvetica = await pdfDoc.embedFont(StandardFonts.Helvetica);
   const helveticaBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
 
   // Top accent bar.
   page.drawRectangle({ x: 0, y: PAGE_HEIGHT - 10, width: PAGE_WIDTH, height: 10, color: RED });
 
-  // Logo.
+  // CAROW logo, left-aligned.
   const logoBytes = fs.readFileSync(LOGO_PATH);
   const logoImage = await pdfDoc.embedPng(logoBytes);
-  const logoWidth = 220;
+  const logoWidth = 190;
   const logoHeight = (logoImage.height / logoImage.width) * logoWidth;
   const logoY = PAGE_HEIGHT - 70 - logoHeight;
   page.drawImage(logoImage, { x: MARGIN, y: logoY, width: logoWidth, height: logoHeight });
 
-  // Rule under the logo.
+  // Co-host (CIRHR) logo, right-aligned and vertically centered on the CAROW
+  // logo's span - optional, since the file may not be committed yet.
+  if (fs.existsSync(CO_HOST_LOGO_PATH)) {
+    const coHostBytes = fs.readFileSync(CO_HOST_LOGO_PATH);
+    const coHostImage = await pdfDoc.embedPng(coHostBytes);
+    const coHostHeight = logoHeight * 1.5;
+    const coHostWidth = (coHostImage.width / coHostImage.height) * coHostHeight;
+    const coHostY = logoY + (logoHeight - coHostHeight) / 2;
+    page.drawImage(coHostImage, {
+      x: MARGIN + CONTENT_WIDTH - coHostWidth,
+      y: coHostY,
+      width: coHostWidth,
+      height: coHostHeight,
+    });
+  }
+
+  // Rule under the logos.
   const ruleY = logoY - 16;
   page.drawRectangle({ x: MARGIN, y: ruleY, width: CONTENT_WIDTH, height: 2, color: RED });
 
   // "WORKING PAPER SERIES" + subtitle.
-  const seriesLabelY = ruleY - 24;
-  page.drawText("WORKING PAPER SERIES", {
+  const seriesLabelY = ruleY - 22;
+  drawTrackedText(page, "WORKING PAPER SERIES", {
     x: MARGIN,
     y: seriesLabelY,
-    size: 14,
-    font: timesBoldItalic,
-    color: RED_DARK,
+    size: 13,
+    font: helveticaBold,
+    color: RED,
+    tracking: 0.6,
   });
   page.drawText(`${carowName} · ${parentName}`, {
     x: MARGIN,
@@ -106,50 +133,65 @@ async function buildCoverPageBytes({ title, authors, wpLabel, dateText, shortTit
   });
 
   // Title (wrapped).
-  const titleSize = 22;
-  const titleLineHeight = 28;
+  const titleSize = 24,
+    titleLineHeight = 30;
   const titleLines = wrapText(timesBold, title, titleSize, CONTENT_WIDTH);
-  let cursorY = seriesLabelY - 70;
+  let cursorY = seriesLabelY - 60;
   for (const line of titleLines) {
     page.drawText(line, { x: MARGIN, y: cursorY, size: titleSize, font: timesBold, color: RED });
     cursorY -= titleLineHeight;
   }
 
-  // Authors box.
+  // Date.
+  if (dateText) {
+    page.drawText(dateText, { x: MARGIN, y: cursorY - 30, size: 11, font: helvetica, color: INK });
+  }
+
+  // Full-bleed maroon block, pinned to the bottom of the page: authors, a
+  // divider, the WP number, and the series name, all in white. Its height
+  // grows with the author count rather than a fixed value, so a long author
+  // list never gets cramped or overlaps the WP number.
   const authorLines = authors.map((a) => (a.affiliation ? `${a.name} (${a.affiliation})` : a.name));
   const authorFontSize = 11;
   const authorLineHeight = 16;
-  const boxPaddingY = 14;
-  const boxTop = cursorY - 24;
-  const boxHeight = authorLines.length * authorLineHeight + boxPaddingY * 2 - (authorLineHeight - authorFontSize);
-  const boxBottom = boxTop - boxHeight;
-  page.drawRectangle({ x: MARGIN, y: boxBottom, width: CONTENT_WIDTH, height: boxHeight, color: BG_ALT });
-  let authorY = boxTop - boxPaddingY - authorFontSize;
+  const blockTopPadding = 36;
+  const ruleGap = 18;
+  const wpGap = 16;
+  const wpLineHeight = 18;
+  const footerGap = 28;
+  const footerLineHeight = 12;
+  const bottomPadding = 24;
+  const blockHeight = Math.max(
+    220,
+    blockTopPadding +
+      authorLines.length * authorLineHeight +
+      ruleGap +
+      wpGap +
+      wpLineHeight +
+      footerGap +
+      footerLineHeight +
+      bottomPadding,
+  );
+  page.drawRectangle({ x: 0, y: 0, width: PAGE_WIDTH, height: blockHeight, color: RED });
+
+  let authorY = blockHeight - blockTopPadding;
   for (const line of authorLines) {
-    page.drawText(line, { x: MARGIN + 16, y: authorY, size: authorFontSize, font: helvetica, color: INK });
+    page.drawText(line, { x: MARGIN, y: authorY, size: authorFontSize, font: helvetica, color: WHITE });
     authorY -= authorLineHeight;
   }
 
-  // Date, below the authors box.
-  if (dateText) {
-    page.drawText(dateText, { x: MARGIN, y: boxBottom - 24, size: 10, font: helvetica, color: MUTED });
-  }
+  const dividerY = authorY - ruleGap + authorLineHeight - authorFontSize;
+  page.drawRectangle({ x: MARGIN, y: dividerY, width: CONTENT_WIDTH, height: 1, color: WHITE });
 
-  // WP number box, pinned near the bottom.
-  const wpBoxY = 90;
-  const wpBoxHeight = 26;
-  page.drawRectangle({ x: MARGIN, y: wpBoxY, width: 260, height: wpBoxHeight, color: BG_ALT });
   page.drawText(wpLabel, {
-    x: MARGIN + 12,
-    y: wpBoxY + 8,
-    size: 12,
+    x: MARGIN,
+    y: dividerY - wpGap - wpLineHeight + 4,
+    size: 13,
     font: helveticaBold,
-    color: INK,
+    color: WHITE,
   });
 
-  // Footer rule + series name.
-  page.drawRectangle({ x: MARGIN, y: 60, width: CONTENT_WIDTH, height: 1, color: BORDER });
-  page.drawText(shortTitle, { x: MARGIN, y: 44, size: 9, font: helvetica, color: MUTED });
+  page.drawText(shortTitle, { x: MARGIN, y: bottomPadding, size: 8, font: helvetica, color: WHITE });
 
   return pdfDoc.save();
 }
