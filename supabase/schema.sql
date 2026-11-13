@@ -55,7 +55,7 @@ create table if not exists submissions (
   assigned_to text,
   received_date date not null default current_date,
   status text not null default 'submitted'
-    check (status in ('submitted', 'under_review', 'accepted', 'rejected', 'published')),
+    check (status in ('submitted', 'under_review', 'revision_requested', 'accepted', 'rejected', 'published')),
   decision_notes text,
   wp_number text,
   manuscript_path text,
@@ -86,6 +86,13 @@ alter table submissions add column if not exists manuscript_box_url text;
 -- the cover-sheeted PDF emailed to them by "Build cover sheet". Distinct
 -- from manuscript_box_url, which is the pre-publication review copy.
 alter table submissions add column if not exists published_pdf_url text;
+
+-- Adds the "revision_requested" status (a paper sent back to the authors
+-- for changes rather than accepted or rejected outright) for databases
+-- created before it existed.
+alter table submissions drop constraint if exists submissions_status_check;
+alter table submissions add constraint submissions_status_check
+  check (status in ('submitted', 'under_review', 'revision_requested', 'accepted', 'rejected', 'published'));
 
 alter table submissions enable row level security;
 

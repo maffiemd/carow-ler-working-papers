@@ -38,7 +38,7 @@
   var tbody = document.getElementById("submissions-tbody");
   var emptyNote = document.getElementById("submissions-empty");
 
-  var STATUSES = ["submitted", "under_review", "accepted", "rejected", "published"];
+  var STATUSES = ["submitted", "under_review", "revision_requested", "accepted", "rejected", "published"];
 
   function populateRoster() {
     (window.EDITOR_ROSTER || []).forEach(function (name) {
