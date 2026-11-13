@@ -26,7 +26,7 @@ import {
   renderLetterHtml,
   sanitizeSubject,
   splitList,
-} from "../reject-submission/letter.ts";
+} from "../_shared/letter.ts";
 
 const SERIES_NAME = "CAROW LER Working Papers";
 const MAX_BODY_CHARS = 10000;
