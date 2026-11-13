@@ -62,6 +62,7 @@ create table if not exists submissions (
   hidden boolean not null default false,
   author_message text,
   rejection_letter text,
+  revision_letter text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -70,6 +71,10 @@ create table if not exists submissions (
 alter table submissions add column if not exists hidden boolean not null default false;
 alter table submissions add column if not exists author_message text;
 alter table submissions add column if not exists rejection_letter text;
+
+-- Keeps a copy of the most recent revision-request letter, mirroring
+-- rejection_letter - see supabase/functions/request-revisions.
+alter table submissions add column if not exists revision_letter text;
 
 -- Manuscripts now live in Cornell Box (a shared link pasted in by the
 -- editor), not Supabase Storage - see the dashboard's "Manuscript link"

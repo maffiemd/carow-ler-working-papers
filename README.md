@@ -277,13 +277,17 @@ at [github.com/settings/tokens](https://github.com/settings/tokens):
 supabase functions deploy build-cover-sheet
 supabase functions deploy publish-submission
 supabase functions deploy reject-submission
+supabase functions deploy request-revisions
 supabase functions deploy email-authors
 supabase functions deploy invite-board-member
 ```
 (No `--no-verify-jwt` on any of these, unlike `notify-owner` — they *should* require a
 valid signed-in session, since the dashboard calls them on the editor's behalf.
 `build-cover-sheet` is step 1 of publishing (see "Publishing: the two-step flow" above);
-`reject-submission` sends the "Reject & notify" letter, `email-authors` sends the
+`reject-submission` sends the "Reject & notify" letter, `request-revisions` sends the
+"Request revisions" letter (same idea, but marks the submission `revision_requested`
+instead of `rejected`, and isn't a one-shot decision — it can be sent again for another
+round), `email-authors` sends the
 "Email authors" message (same letter layout, but doesn't touch the submission's status),
 and `invite-board-member` sends the "ask a board member to help review" message with the
 manuscript attached (see below), using the same `RESEND_API_KEY`, `NOTIFY_FROM_EMAIL`,
@@ -326,16 +330,18 @@ site, and the submission still flips to `published` in Supabase. Only the email 
 are faked, so you can test the real thing without finding out the hard way that a real
 subscriber got a test email.
 
-The dashboard's **Reject & notify** letter is sent by a Supabase Edge Function, not
-GitHub Actions, so it needs its *own* copy of the setting: a Supabase secret named
-`STAGING_EMAIL` (`supabase secrets set STAGING_EMAIL=you@example.com`). Set both while testing.
-Its **Send preview to me** button is the other safety net: it emails the letter to the
-signed-in editor only and changes nothing on the submission.
+The dashboard's **Reject & notify** and **Request revisions** letters are sent by
+Supabase Edge Functions, not GitHub Actions, so they need their *own* copy of the
+setting: a Supabase secret named `STAGING_EMAIL` (`supabase secrets set
+STAGING_EMAIL=you@example.com`). Set both while testing. Their **Send preview to me**
+button is the other safety net: it emails the letter to the signed-in editor only and
+changes nothing on the submission.
 
 Delete (or blank out) the `STAGING_EMAIL` variable before actually launching, or every
 real paper will only ever email you — `notify-subscribers.yml`,
-`notify-author-accepted.js`, and `reject-submission` all treat an empty value the same as
-unset. Remember to remove the Supabase secret too (`supabase secrets unset STAGING_EMAIL`).
+`notify-author-accepted.js`, `reject-submission`, and `request-revisions` all treat an
+empty value the same as unset. Remember to remove the Supabase secret too (`supabase
+secrets unset STAGING_EMAIL`).
 
 This replaces manually disabling/re-enabling the "Notify Subscribers" workflow around each
 test, which works but is easy to forget to turn back on.

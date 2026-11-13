@@ -316,6 +316,14 @@
   var rejectStatus = document.getElementById("reject-status");
   var rejectingSubmission = null;
 
+  var REVISION_PLACEHOLDER = "[Add the specific revisions requested here, or delete this line.]";
+  var revisionModal = document.getElementById("revision-modal");
+  var revisionForm = document.getElementById("revision-form");
+  var revisionSubject = document.getElementById("revision-subject");
+  var revisionBody = document.getElementById("revision-body");
+  var revisionStatus = document.getElementById("revision-status");
+  var revisingSubmission = null;
+
   var emailModal = document.getElementById("email-modal");
   var emailForm = document.getElementById("email-form");
   var emailSubject = document.getElementById("email-subject");
@@ -346,6 +354,18 @@
       "After careful consideration, we have decided not to include it in the series at this time.\n\n" +
       REJECT_PLACEHOLDER + "\n\n" +
       "We appreciate your interest in the series and wish you the best with the paper.\n\n" +
+      "Best,\nKourtney Koebel and Michael Maffie\nEditors, CAROW LER Working Papers"
+    );
+  }
+
+  function draftRevisionLetter(submission) {
+    var names = (submission.authors || []).map(function (a) { return a.name; }).filter(Boolean);
+    return (
+      (names.length ? "Dear " + joinNames(names) + "," : "Dear author,") + "\n\n" +
+      'Thank you for submitting "' + submission.title + '" to CAROW LER Working Papers. ' +
+      "We would like to invite you to revise and resubmit your manuscript.\n\n" +
+      REVISION_PLACEHOLDER + "\n\n" +
+      "Please let us know if you have any questions.\n\n" +
       "Best,\nKourtney Koebel and Michael Maffie\nEditors, CAROW LER Working Papers"
     );
   }
@@ -431,6 +451,85 @@
   document.getElementById("reject-cancel").addEventListener("click", closeRejectModal);
   document.addEventListener("keydown", function (event) {
     if (event.key === "Escape" && !rejectModal.hidden) closeRejectModal();
+  });
+
+  function openRevisionModal(submission) {
+    revisingSubmission = submission;
+    document.getElementById("revision-title").textContent = submission.title;
+    revisionSubject.value = "Revisions requested for your submission to CAROW LER Working Papers: " + submission.title;
+    revisionBody.value = draftRevisionLetter(submission);
+    var emails = authorEmails(submission);
+    document.getElementById("revision-recipients").textContent = emails.length
+      ? "Will email: " + emails.join(", ")
+      : "No author email is on file, so sending will only mark this submission as revision requested; nothing will be emailed.";
+    document.getElementById("revision-send").textContent = emails.length ? "Send revision request" : "Mark as revision requested";
+    revisionStatus.textContent = "";
+    revisionModal.hidden = false;
+    revisionSubject.focus();
+  }
+
+  function closeRevisionModal() {
+    revisionModal.hidden = true;
+    revisingSubmission = null;
+  }
+
+  async function sendRevisionRequest(preview) {
+    var submission = revisingSubmission;
+    if (!submission) return;
+    var subject = revisionSubject.value.trim();
+    var body = revisionBody.value.trim();
+    if (!subject || !body) {
+      revisionStatus.textContent = "The subject and letter can't be empty.";
+      return;
+    }
+    if (body.indexOf(REVISION_PLACEHOLDER) !== -1) {
+      revisionStatus.textContent = "Replace or delete the bracketed placeholder line first.";
+      return;
+    }
+    if (!preview) {
+      var emails = authorEmails(submission);
+      var question = emails.length
+        ? "Send this revision request to " + emails.join(", ") + "? This can't be undone."
+        : 'Mark "' + submission.title + '" as revision requested? No email will be sent, since no author email is on file.';
+      if (!confirm(question)) return;
+    }
+
+    var buttons = revisionForm.querySelectorAll("button");
+    buttons.forEach(function (b) { b.disabled = true; });
+    revisionStatus.textContent = preview ? "Sending preview…" : "Sending…";
+
+    var { data, error } = await supabase.functions.invoke("request-revisions", {
+      body: { submission_id: submission.id, subject: subject, body: body, preview: preview },
+    });
+    buttons.forEach(function (b) { b.disabled = false; });
+    if (error) {
+      revisionStatus.textContent = "Failed: " + (await functionErrorMessage(error));
+      return;
+    }
+
+    if (preview) {
+      revisionStatus.textContent = "Preview sent to " + (data && data.to ? data.to.join(", ") : "you") + ".";
+      return;
+    }
+    closeRevisionModal();
+    if (data && data.staging) {
+      alert("STAGING: the letter was sent to " + data.to.join(", ") + " instead of the authors. The submission is marked revision requested.");
+    } else if (data && data.emailed) {
+      alert("Revision request sent to " + data.emailed + " address" + (data.emailed === 1 ? "" : "es") + ".");
+    } else {
+      alert("Marked as revision requested. No email was sent, since no author email is on file.");
+    }
+    loadSubmissions();
+  }
+
+  revisionForm.addEventListener("submit", function (event) {
+    event.preventDefault();
+    sendRevisionRequest(false);
+  });
+  document.getElementById("revision-preview").addEventListener("click", function () { sendRevisionRequest(true); });
+  document.getElementById("revision-cancel").addEventListener("click", closeRevisionModal);
+  document.addEventListener("keydown", function (event) {
+    if (event.key === "Escape" && !revisionModal.hidden) closeRevisionModal();
   });
 
   function openEmailModal(submission) {
@@ -699,6 +798,7 @@
     } else {
       menuItems.push({ label: "Build cover sheet", handler: function () { buildCoverSheet(submission); } });
       menuItems.push({ label: "Accept & Publish", handler: function () { openPublishModal(submission); } });
+      menuItems.push({ label: "Request revisions", handler: function () { openRevisionModal(submission); } });
 
       if (submission.rejection_letter) {
         var sentLabel = document.createElement("div");

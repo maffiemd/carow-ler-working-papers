@@ -176,6 +176,29 @@ permalink: /dashboard/
   </form>
 </div>
 
+<div id="revision-modal" class="dashboard-modal" hidden>
+  <form id="revision-form" class="dashboard-form">
+    <h2>Request revisions</h2>
+    <p id="revision-title" class="dashboard-hint"></p>
+
+    <label for="revision-subject">Subject</label>
+    <input type="text" id="revision-subject" required>
+
+    <label for="revision-body">Letter</label>
+    <textarea id="revision-body" rows="14" required></textarea>
+    <p class="dashboard-hint">Edit freely. A blank line starts a new paragraph. Replace or delete the bracketed placeholder line before sending.</p>
+    <p id="revision-recipients" class="dashboard-hint"></p>
+    <p class="dashboard-hint">Sending can't be undone. Use <strong>Send preview to me</strong> first to see exactly how it will look.</p>
+
+    <div class="dashboard-form__actions">
+      <button type="submit" id="revision-send">Send revision request</button>
+      <button type="button" id="revision-preview" class="dashboard-button--secondary">Send preview to me</button>
+      <button type="button" id="revision-cancel" class="dashboard-button--secondary">Cancel</button>
+    </div>
+    <p id="revision-status" class="dashboard-status" role="status"></p>
+  </form>
+</div>
+
 <div id="email-modal" class="dashboard-modal" hidden>
   <form id="email-form" class="dashboard-form">
     <h2>Email authors</h2>
