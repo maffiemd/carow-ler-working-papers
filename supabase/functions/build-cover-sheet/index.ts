@@ -36,6 +36,18 @@ function response(body: BodyInit | null, init: ResponseInit = {}): Response {
   return new Response(body, { ...init, headers: { ...CORS_HEADERS, ...init.headers } });
 }
 
+// A Box "shared link" (https://<org>.box.com/s/<token>, what an editor
+// actually gets from Box's "Copy shared link" button) serves an
+// interactive HTML viewer page when fetched directly - the real file
+// bytes are only ever loaded by that page's own JS, so curling it (as the
+// GitHub Action does below) downloads the viewer page, not the manuscript.
+// Box's "/shared/static/<token>" form is the same link rewritten to its
+// documented direct-download path, which actually returns the file.
+function toDirectDownloadUrl(url: string): string {
+  const match = url.match(/^(https?:\/\/[^/]+\.box\.com)\/s\/([A-Za-z0-9]+)(?:[/?#].*)?$/);
+  return match ? `${match[1]}/shared/static/${match[2]}` : url;
+}
+
 function slugify(title: string): string {
   return title
     .toLowerCase()
@@ -110,11 +122,12 @@ Deno.serve(async (req) => {
 
   // Same reasoning as publish-submission: the GitHub Action curls this
   // URL directly, so it just needs to be a plain, unauthenticated,
-  // directly-downloadable link. Only a submission stored before the Box
-  // migration falls back to signing a Storage URL.
+  // directly-downloadable link - hence toDirectDownloadUrl() above. Only
+  // a submission stored before the Box migration falls back to signing a
+  // Storage URL (already directly downloadable as-is).
   let manuscriptUrl: string;
   if (submission.manuscript_box_url) {
-    manuscriptUrl = submission.manuscript_box_url;
+    manuscriptUrl = toDirectDownloadUrl(submission.manuscript_box_url);
   } else {
     const { data: signedUrlData, error: signedUrlError } = await supabase.storage
       .from("manuscripts")
