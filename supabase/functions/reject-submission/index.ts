@@ -15,7 +15,9 @@
 //                       address instead of the authors.
 //
 // Required secrets: RESEND_API_KEY, NOTIFY_FROM_EMAIL (set up for notify-owner).
-// Optional: REPLY_TO (comma-separated), SITE_URL, STAGING_EMAIL.
+// Optional: REPLY_TO (comma-separated), SITE_URL, STAGING_EMAIL,
+// EDITOR_CC_EMAILS (comma-separated editor addresses CC'd on the real send -
+// skipped for preview/staging, which don't reach the authors anyway).
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 import {
@@ -108,6 +110,10 @@ Deno.serve(async (req) => {
   if (to.length > 0) {
     const replyTo = splitList(Deno.env.get("REPLY_TO"));
     const siteUrl = (Deno.env.get("SITE_URL") ?? "").replace(/\/$/, "");
+    // Only CC the editors on a real send to the authors - preview already
+    // goes to the signed-in editor only, and staging redirects to a test
+    // address, so CC'ing here too would leak a real email in both cases.
+    const editorCc = !preview && !stagingEmail ? splitList(Deno.env.get("EDITOR_CC_EMAILS")) : [];
     const sendRes = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
@@ -121,6 +127,7 @@ Deno.serve(async (req) => {
         html: renderLetterHtml({ title: submission.title, body, siteUrl, seriesName: SERIES_NAME }),
         text: body,
         ...(replyTo.length > 0 ? { reply_to: replyTo } : {}),
+        ...(editorCc.length > 0 ? { cc: editorCc } : {}),
       }),
     });
     if (!sendRes.ok) {

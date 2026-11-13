@@ -17,6 +17,10 @@
 //   AUTHOR_MESSAGE    free-text note from the editors, shown under the
 //                      congratulations (blank lines = new paragraph)
 //   REPLY_TO          comma-separated for several addresses
+//   EDITOR_CC_EMAILS  comma-separated editor addresses CC'd on the real
+//                      send (skipped in staging - the editors would
+//                      otherwise get a real email while the author send
+//                      is still being redirected for testing)
 //   STAGING_EMAIL     if set, every author email is redirected here instead
 //                      (subject tagged with the real intended recipient) -
 //                      see "Staging mode" in the README
@@ -101,6 +105,7 @@ async function main() {
   const fromEmail = requireEnv("FROM_EMAIL");
   const replyTo = (process.env.REPLY_TO || "").split(",").map((s) => s.trim()).filter(Boolean);
   const stagingEmail = process.env.STAGING_EMAIL;
+  const editorCc = (process.env.EDITOR_CC_EMAILS || "").split(",").map((s) => s.trim()).filter(Boolean);
 
   const resend = new Resend(requireEnv("RESEND_API_KEY"));
   const wpLabel = `${seriesPrefix}-${wpNumber}`;
@@ -122,6 +127,7 @@ ${siteUrl}`;
     from: fromEmail,
     to: stagingEmail || author.email,
     ...(replyTo.length > 0 && { reply_to: replyTo }),
+    ...(!stagingEmail && editorCc.length > 0 && { cc: editorCc }),
     subject: stagingEmail ? `[STAGING, would go to ${author.email}] ${subject}` : subject,
     html: renderEmailHtml({
       authorName: author.name,

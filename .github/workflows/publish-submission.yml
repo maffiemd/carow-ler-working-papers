@@ -73,6 +73,7 @@ jobs:
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           FROM_EMAIL: ${{ vars.FROM_EMAIL }}
           REPLY_TO: ${{ vars.REPLY_TO }}
+          EDITOR_CC_EMAILS: ${{ vars.EDITOR_CC_EMAILS }}
           STAGING_EMAIL: ${{ vars.STAGING_EMAIL }}
           AUTHOR_MESSAGE: ${{ github.event.client_payload.author_message }}
 
