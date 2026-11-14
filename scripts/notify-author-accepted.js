@@ -123,11 +123,15 @@ Kourtney Koebel and Michael Maffie
 Editors, CAROW LER Working Papers
 ${siteUrl}`;
 
-  const emails = authors.map((author) => ({
+  const emails = authors.map((author, index) => ({
     from: fromEmail,
     to: stagingEmail || author.email,
     ...(replyTo.length > 0 && { reply_to: replyTo }),
-    ...(!stagingEmail && editorCc.length > 0 && { cc: editorCc }),
+    // CC the editors on exactly one email per publish (not once per
+    // author) - otherwise a multi-author paper CCs them a separate time
+    // for every author, which reads as the paper having published
+    // multiple times.
+    ...(index === 0 && !stagingEmail && editorCc.length > 0 && { cc: editorCc }),
     subject: stagingEmail ? `[STAGING, would go to ${author.email}] ${subject}` : subject,
     html: renderEmailHtml({
       authorName: author.name,
