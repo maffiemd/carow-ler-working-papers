@@ -31,24 +31,24 @@ editors:
     affiliation: "Cornell University, Johnson Graduate School of Management"
 
 editorial_board:
+  - name: "Mark Anner"
+    affiliation: "Rutgers University, School of Management and Labor Relations"
   - name: "Ariel Avgar"
     affiliation: "Cornell University, ILR School"
   - name: "Rafael Gomez"
     affiliation: "University of Toronto, Centre for Industrial Relations and Human Resources"
-  - name: "Mark Anner"
-    affiliation: "Rutgers University, School of Management and Labor Relations"
-  - name: "Dionne Pohler"
-    affiliation: "Cornell University, ILR School"
-  - name: "Sean O'Brady"
-    affiliation: "McMaster University, DeGroote School of Business"
   - name: "Mark Gough"
     affiliation: "The Pennsylvania State University, School of Labor and Employment Relations"
-  - name: Tingting Zhang
-    affiliation: "The University of Illinois Urbana-Champaign, School of Labor and Employment Relations"
   - name: "Jenna Myers"
     affiliation: "University of Toronto, Centre for Industrial Relations and Human Resources"
+  - name: "Sean O'Brady"
+    affiliation: "McMaster University, DeGroote School of Business"
+  - name: "Dionne Pohler"
+    affiliation: "Cornell University, ILR School"
   - name: "Shannon Potter"
     affiliation: "Université Laval, Département des Relations Industrielles"
+  - name: Tingting Zhang
+    affiliation: "The University of Illinois Urbana-Champaign, School of Labor and Employment Relations"
 
 contact_email: "kourtney.koebel@utoronto.ca,maffie@cornell.edu"
 
