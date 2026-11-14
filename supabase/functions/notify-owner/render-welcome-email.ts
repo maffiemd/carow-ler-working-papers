@@ -16,7 +16,10 @@ const COLOR_BORDER = "#e0e0e0";
 export function renderWelcomeEmailHtml(siteUrl: string, unsubscribeLink: string) {
   const papersLink = `${siteUrl}/papers/`;
   const carowLogoUrl = `${siteUrl}/assets/images/carow-logo-email.png`;
-  const uoftCrestUrl = `${siteUrl}/assets/images/uoft-crest-email.png`;
+  // Same CIRHR lockup as the cover sheet (scripts/assets/cirhr-logo-print.png),
+  // downsized for email - was a plain University of Toronto crest, which
+  // didn't match the co-branding used everywhere else (cover sheet, footer).
+  const cirhrLogoUrl = `${siteUrl}/assets/images/cirhr-logo-email.png`;
 
   const paragraphs = WELCOME_EMAIL_BODY.trim()
     .split(/\n\s*\n/)
@@ -30,7 +33,7 @@ export function renderWelcomeEmailHtml(siteUrl: string, unsubscribeLink: string)
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;">
         <tr>
           <td align="left"><img src="${carowLogoUrl}" width="180" height="44" alt="CAROW" style="display:block;"></td>
-          <td align="right"><img src="${uoftCrestUrl}" width="21" height="44" alt="University of Toronto" style="display:block;margin-left:auto;"></td>
+          <td align="right"><img src="${cirhrLogoUrl}" width="76" height="44" alt="Centre for Industrial Relations and Human Resources" style="display:block;margin-left:auto;"></td>
         </tr>
       </table>
       <hr style="margin:0 0 20px;border:none;border-top:1px solid ${COLOR_BORDER};">

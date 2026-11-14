@@ -7,6 +7,6 @@ export const WELCOME_EMAIL_SUBJECT = "Welcome to CAROW Working Papers in Labor &
 
 export const WELCOME_EMAIL_BODY = `Thanks for subscribing. The CAROW LER Working Papers is a collaboration between the Center for Applied Research on Work (CAROW) at Cornell University's ILR School and the Centre for Industrial Relations and Human Resources (CIRHR) at the University of Toronto. The series circulates new research on industrial relations, employment relations, labor-management institutions, collective bargaining, and related workplace governance topics. Working papers are both posted on the website and circulated via email.
 
-If you have any questions or would like to submit a paper for consideration, please contact Michael Maffie (maffie@cornell.edu) or Kourtney Koebel (kourtney.koebel@utoronto.ca).
+If you'd like to submit a paper for consideration, submit a PDF of the complete paper through our <a href="https://cornell.app.box.com/f/793bb2a75966443f9587c0fb45bae939">Box submission form</a>, including your name, affiliation, email, and paper title. If you have questions or a short cover note you'd like to add, email the series editors, Michael Maffie (maffie@cornell.edu) or Kourtney Koebel (kourtney.koebel@utoronto.ca).
 
 You can browse the full archive any time at the link below.`;
